@@ -482,6 +482,11 @@
       <p class="nota" style="margin:-4px 0 12px" id="mapas-nota">Guarda los mapas de todos los días para verlos sin señal y no gastar tus GB de roaming. Hazlo con Wi-Fi.</p>
       <button class="btn sec" id="mapas-guardar">Guardar mapas de todos los días</button>
     </div>
+    <div class="bloque">
+      <div class="tit">Compartir el plan</div>
+      <p class="nota" style="margin:-4px 0 12px">Itinerario día por día con costos estimados y lo que ya gastaron, listo para mandar por WhatsApp.</p>
+      <div class="duo"><button class="btn sec" style="margin:0" data-exportar="pdf">PDF</button><button class="btn sec" style="margin:0" data-exportar="xlsx">Excel</button></div>
+    </div>
   </section>
 
   <!-- ============ CAMBIO ============ -->
@@ -691,7 +696,7 @@
   <div class="resu" id="resumen"></div>
   <div style="height:16px"></div>
   <button class="btn" id="x-compartir">Compartir resumen</button>
-  <button class="btn sec" id="x-csv">Descargar gastos en Excel (CSV)</button>
+  <div class="duo" style="margin-top:9px"><button class="btn sec" style="margin:0" data-exportar="pdf">PDF</button><button class="btn sec" style="margin:0" data-exportar="xlsx">Excel</button></div>
 </div>
 
 <div class="hoja" id="hoja-docs">
@@ -2426,17 +2431,6 @@ $('x-compartir').onclick=async()=>{
     await navigator.clipboard.writeText(texto); avisar('Resumen copiado. Pégalo donde quieras.');
   }catch(e){ if(e&&e.name!=='AbortError') avisar('No se pudo compartir.'); }
 };
-$('x-csv').onclick=async()=>{
-  const nombre='gastos-viaje-buenos-aires.csv';
-  const blob=new Blob([csvGastos()],{type:'text/csv;charset=utf-8'});
-  try{
-    const f=new File([blob],nombre,{type:'text/csv'});
-    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){
-      await navigator.share({files:[f],title:'Gastos del viaje'}); return;
-    }
-  }catch(e){ if(e&&e.name==='AbortError') return; }
-  descargar(blob,nombre);
-};
 
 /* ================= ajustes ================= */
 function sumaTopes(){
@@ -2509,6 +2503,7 @@ document.body.addEventListener('click',async e=>{
   if(ds.hoja!==undefined){ abrir(ds.hoja); return; }
   if(ds.nuevoGasto!==undefined){ abrirGasto(null); return; }
   if(ds.docs!==undefined){ abrirDocs(); return; }
+  if(ds.exportar!==undefined){ exportar(ds.exportar,t); return; }
   if(ds.cambio!==undefined){ const c=E.billetera.cambios.find(x=>String(x.id)===ds.cambio); if(c) abrirCambio(c); return; }
   if(ds.gasto!==undefined){ const g=E.gastos.find(x=>String(x.id)===ds.gasto); if(g) abrirGasto(g); return; }
   if(ds.hoy!==undefined){
@@ -2877,6 +2872,278 @@ $('rs-aplicar').onclick=async()=>{
   E=migrar(d); await guardar(); cerrar(); pintarTodo();
   avisar('Respaldo restaurado',async()=>{ E=migrar(JSON.parse(antes)); await guardar(); pintarTodo(); });
 };
+
+/* ================= exportar: PDF y Excel sin librerías ================= */
+function datosExport(){
+  const gastado=E.gastos.reduce((t,g)=>t+pesoDe(g),0);
+  const dias=DIAS.map(d=>{
+    const ps=E.itinerario[d.id]||[];
+    return {d,ps:ps.map(p=>({h:p.h,t:p.t,nota:p.nota||'',costo:p.costo||'',est:(p.est||[]).reduce((t,x)=>t+estSoles(x),0),ok:!!p.ok})),
+      est:estDePasos(ps).total, real:E.gastos.filter(g=>g.dia===d.f).reduce((t,g)=>t+pesoDe(g),0)};
+  });
+  const estCat=estDePasos(Object.values(E.itinerario).flat()), porCat=totalesPorCat();
+  const sobres=['Pasajes'].concat(CATS).filter(c=>E.topes[c]||porCat[c]).map(c=>({c,tope:E.topes[c]||0,est:estCat[c]||0,real:porCat[c]||0}));
+  const gastos=E.gastos.slice().sort((a,b)=>DIAS_G.findIndex(x=>x.f===a.dia)-DIAS_G.findIndex(x=>x.f===b.dia)||a.cuando-b.cuando);
+  return {gastado,disponible:E.presupuesto-gastado,estimado:estCat.total,dias,sobres,gastos,hoy:new Date().toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'})};
+}
+const soles=n=>'S/ '+nf(n,2);
+const solesR=n=>'S/ '+nf(Math.round(n),0);
+
+async function entregar(blob,nombre,titulo){
+  try{
+    const f=new File([blob],nombre,{type:blob.type});
+    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:titulo}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  descargar(blob,nombre);
+}
+
+/* ---------- PDF ---------- */
+const PDF_ANCHO={
+  n:[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584],
+  b:[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584]
+};
+const PDF_ESP={'\u00A0':' ','\u2013':'\x96','\u2014':'\x97','\u201C':'\x93','\u201D':'\x94','\u2018':'\x91','\u2019':'\x92','\u2026':'\x85','\u2022':'\x95','\u2248':'~','\u2192':'->','\u00B7':'\xB7'};
+/* texto a bytes WinAnsi: los acentos del español entran; lo demás se simplifica */
+function pdfTexto(t){
+  let r='';
+  for(const ch of String(t)){
+    if(PDF_ESP[ch]!==undefined){ r+=PDF_ESP[ch]; continue; }
+    const c=ch.codePointAt(0);
+    if(c>=32&&c<=126||c>=160&&c<=255) r+=ch;
+    else if(c>255){ const base=ch.normalize('NFD').replace(/[\u0300-\u036f]/g,''); r+=base.length===1&&base.codePointAt(0)<127?base:''; }
+  }
+  return r;
+}
+function pdfAncho(t,tam,negrita){
+  const tabla=negrita?PDF_ANCHO.b:PDF_ANCHO.n; let w=0;
+  for(const ch of pdfTexto(t)){
+    const c=ch.charCodeAt(0);
+    if(c>=32&&c<=126) w+=tabla[c-32];
+    else { const base=ch.normalize('NFD').charCodeAt(0); w+=base>=32&&base<=126?tabla[base-32]:(c===0x97?1000:c===0xB0?400:556); }
+  }
+  return w*tam/1000;
+}
+function pdfPartir(t,tam,negrita,max){
+  const lineas=[]; let actual='';
+  String(t).split(/\s+/).filter(Boolean).forEach(pal=>{
+    const prueba=actual?actual+' '+pal:pal;
+    if(pdfAncho(prueba,tam,negrita)<=max||!actual) actual=prueba; else { lineas.push(actual); actual=pal; }
+  });
+  if(actual) lineas.push(actual);
+  return lineas.length?lineas:[''];
+}
+function crearPDF(){
+  const W=595.28, H=841.89, M=48, X=W-M;
+  const TINTA='0.071 0.090 0.102', GRIS='0.420 0.478 0.471', TEAL='0.055 0.486 0.482', LINEA='0.890 0.914 0.910', SUAVE='0.949 0.961 0.961';
+  const paginas=[]; let ops, y;
+  const esc=t=>pdfTexto(t).replace(/[\\()]/g,m=>'\\'+m).replace(/[\x80-\xff]/g,m=>'\\'+m.charCodeAt(0).toString(8).padStart(3,'0'));
+  const nueva=()=>{ ops=[]; paginas.push(ops); y=H-M; };
+  const texto=(t,x,yy,tam,{negrita=false,color=TINTA,alinear='izq'}={})=>{
+    let xx=x; if(alinear==='der') xx=x-pdfAncho(t,tam,negrita); else if(alinear==='centro') xx=x-pdfAncho(t,tam,negrita)/2;
+    ops.push(`BT /${negrita?'F2':'F1'} ${tam} Tf ${color} rg ${xx.toFixed(2)} ${yy.toFixed(2)} Td (${esc(t)}) Tj ET`);
+  };
+  const linea=(x1,yy,x2,color=LINEA,grosor=0.6)=>ops.push(`${color} RG ${grosor} w ${x1.toFixed(2)} ${yy.toFixed(2)} m ${x2.toFixed(2)} ${yy.toFixed(2)} l S`);
+  const caja=(x,yy,w,h,color)=>ops.push(`${color} rg ${x.toFixed(2)} ${yy.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+  const espacio=h=>{ if(y-h<M+24) { nueva(); return true; } return false; };
+
+  const X_=datosExport();
+  nueva();
+  /* portada */
+  texto('Viaje a Buenos Aires',M,y-22,22,{negrita:true});
+  texto('20 al 25 de noviembre de 2026  ·  Itinerario y gastos',M,y-42,10.5,{color:GRIS});
+  texto('Actualizado el '+X_.hoy,X,y-42,9,{color:GRIS,alinear:'der'});
+  y-=58; linea(M,y,X,TEAL,1.2); y-=26;
+
+  /* resumen */
+  const cols=[['Presupuesto',solesR(E.presupuesto)],['Gastado',solesR(X_.gastado)],['Disponible',solesR(X_.disponible)],['Estimado del plan',solesR(X_.estimado)]];
+  const cw=(X-M)/4;
+  cols.forEach(([k,v],i)=>{ texto(k.toUpperCase(),M+i*cw,y,7.5,{color:GRIS,negrita:true}); texto(v,M+i*cw,y-18,15,{negrita:true}); });
+  y-=40;
+
+  /* días */
+  const cHora=M, cParada=M+46, cEst=X, anchoParada=X-100-cParada;
+  X_.dias.forEach(({d,ps,est,real})=>{
+    espacio(90);
+    y-=14; caja(M,y-8,X-M,28,SUAVE);
+    texto(d.n,M+10,y+2,12,{negrita:true});
+    texto(d.s,M+10+pdfAncho(d.n,12,true)+10,y+2.5,9,{color:GRIS});
+    texto(`Estimado ${solesR(est)}  ·  Gastado ${solesR(real)}`,X-10,y+2.5,9,{color:GRIS,alinear:'der'});
+    y-=24;
+    ps.forEach(p=>{
+      const tl=pdfPartir(p.t,10,true,anchoParada), nl=p.nota?pdfPartir(p.nota,8.5,false,anchoParada):[];
+      const alto=10+(tl.length-1)*13+11*(nl.length+(p.costo||p.ok?1:0))+12;
+      if(espacio(alto)){ texto(d.n+' (continuación)',M,y-4,9,{color:GRIS,negrita:true}); y-=18; }
+      const b0=y-10;
+      texto(p.h,cHora,b0,9.5,{color:TEAL,negrita:true});
+      tl.forEach((l,i)=>texto(l,cParada,b0-i*13,10,{negrita:true,color:p.ok?GRIS:TINTA}));
+      if(p.est) texto(soles(p.est),cEst,b0,10,{alinear:'der'});
+      else texto('—',cEst,b0,10,{color:GRIS,alinear:'der'});
+      let yy=b0-(tl.length-1)*13;
+      nl.forEach(l=>{ yy-=11; texto(l,cParada,yy,8.5,{color:GRIS}); });
+      if(p.costo){ yy-=11; texto('Precio: '+p.costo+(p.ok?'   ·   Hecho':''),cParada,yy,8.5,{color:GRIS}); }
+      else if(p.ok){ yy-=11; texto('Hecho',cParada,yy,8.5,{color:TEAL}); }
+      y=yy-7; linea(cParada,y,X); y-=5;
+    });
+    y-=8;
+  });
+
+  /* sobres */
+  espacio(60+X_.sobres.length*18);
+  y-=18; texto('Presupuesto por sobre',M,y,13,{negrita:true}); y-=18;
+  const sc=[M,M+170,M+260,M+370,X];
+  ['Sobre','Tope','Estimado','Gastado','Disponible'].forEach((h,i)=>texto(h.toUpperCase(),sc[i],y,7.5,{color:GRIS,negrita:true,alinear:i?'der':'izq'}));
+  y-=6; linea(M,y,X,TINTA,0.8); y-=14;
+  let tt=[0,0,0,0];
+  X_.sobres.forEach(o=>{
+    espacio(18);
+    const disp=o.tope-o.real;
+    texto(o.c,sc[0],y,10);
+    [o.tope,o.est,o.real].forEach((v,i)=>texto(o.c==='Pasajes'&&i<2?'—':solesR(v),sc[i+1],y,10,{alinear:'der',color:o.c==='Pasajes'&&i<2?GRIS:TINTA}));
+    texto(o.c==='Pasajes'?'—':solesR(disp),sc[4],y,10,{alinear:'der',color:o.c==='Pasajes'?GRIS:disp<0?'0.753 0.224 0.169':TINTA});
+    if(o.c!=='Pasajes'){ tt[0]+=o.tope; tt[1]+=o.est; tt[3]+=disp; } tt[2]+=o.real;
+    y-=6; linea(M,y,X); y-=12;
+  });
+  texto('Total',sc[0],y,10,{negrita:true});
+  [tt[0],tt[1],tt[2],tt[3]].forEach((v,i)=>texto(solesR(v),sc[i+1],y,10,{negrita:true,alinear:'der'}));
+  y-=26;
+
+  /* gastos anotados */
+  if(X_.gastos.length){
+    espacio(60);
+    y-=6; texto('Gastos anotados',M,y,13,{negrita:true}); y-=18;
+    const gc=[M,M+86,M+290,M+420,X];
+    ['Día','Descripción','Sobre','Monto','Soles'].forEach((h,i)=>texto(h.toUpperCase(),gc[i],y,7.5,{color:GRIS,negrita:true,alinear:i>2?'der':'izq'}));
+    y-=6; linea(M,y,X,TINTA,0.8); y-=14;
+    X_.gastos.forEach(g=>{
+      const dl=pdfPartir(g.desc,9.5,false,gc[2]-gc[1]-10);
+      if(espacio(dl.length*12+10)){ y-=4; }
+      texto(nomDia(g.dia),gc[0],y,9.5,{color:GRIS});
+      dl.forEach((l,i)=>texto(l,gc[1],y-i*12,9.5));
+      texto(g.cat,gc[2],y,9.5,{color:GRIS});
+      texto(fmon(g.monto,g.mon).replace(/\u00A0/g,' '),gc[3],y,9.5,{alinear:'der'});
+      texto(soles(pesoDe(g)),gc[4],y,9.5,{alinear:'der',negrita:true});
+      y-=dl.length*12-6; linea(M,y,X); y-=12;
+    });
+  }
+
+  /* pie de página */
+  paginas.forEach((p,i)=>{ ops=p;
+    linea(M,M-8,X);
+    texto('Viaje a Buenos Aires',M,M-22,8,{color:GRIS});
+    texto(`Página ${i+1} de ${paginas.length}`,X,M-22,8,{color:GRIS,alinear:'der'});
+  });
+
+  /* armado del archivo */
+  const objs=[]; const add=o=>{ objs.push(o); return objs.length; };
+  const catalogo=add(null), arbol=add(null);
+  const f1=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  const f2=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  const kids=paginas.map(p=>{
+    const cont=p.join('\n'), cid=add(`<< /Length ${cont.length} >>\nstream\n${cont}\nendstream`);
+    return add(`<< /Type /Page /Parent ${arbol} 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${cid} 0 R >>`);
+  });
+  objs[catalogo-1]=`<< /Type /Catalog /Pages ${arbol} 0 R >>`;
+  objs[arbol-1]=`<< /Type /Pages /Kids [${kids.map(k=>k+' 0 R').join(' ')}] /Count ${kids.length} >>`;
+  const info=add(`<< /Title (Viaje a Buenos Aires) /Producer (Viaje BA) >>`);
+  let out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const offs=[];
+  objs.forEach((o,i)=>{ offs.push(out.length); out+=`${i+1} 0 obj\n${o}\nendobj\n`; });
+  const xref=out.length;
+  out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('');
+  out+=`trailer\n<< /Size ${objs.length+1} /Root ${catalogo} 0 R /Info ${info} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  const bytes=new Uint8Array(out.length); for(let i=0;i<out.length;i++) bytes[i]=out.charCodeAt(i)&255;
+  return new Blob([bytes],{type:'application/pdf'});
+}
+
+/* ---------- Excel (.xlsx) ---------- */
+const CRC_TABLA=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(b){ let c=0xFFFFFFFF; for(let i=0;i<b.length;i++) c=CRC_TABLA[(c^b[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipear(archivos){
+  const enc=new TextEncoder(), partes=[], central=[]; let off=0;
+  const u16=v=>[v&255,v>>>8&255], u32=v=>[v&255,v>>>8&255,v>>>16&255,v>>>24&255];
+  archivos.forEach(([nombre,texto])=>{
+    const n=enc.encode(nombre), d=enc.encode(texto), c=crc32(d);
+    const cab=[...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c),...u32(d.length),...u32(d.length),...u16(n.length),...u16(0)];
+    partes.push(new Uint8Array(cab),n,d);
+    central.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c),...u32(d.length),...u32(d.length),...u16(n.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),n);
+    off+=cab.length+n.length+d.length;
+  });
+  const tam=central.reduce((t,p)=>t+p.length,0);
+  const fin=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(archivos.length),...u16(archivos.length),...u32(tam),...u32(off),...u16(0)]);
+  return new Blob([...partes,...central,fin],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function crearXLSX(){
+  const X_=datosExport();
+  const xe=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+  const col=i=>{ let s=''; i++; while(i){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; };
+  /* estilos: 0 normal · 1 encabezado · 2 soles · 3 título · 4 gris · 5 soles negrita · 6 negrita · 7 texto que se parte */
+  const hoja=(filas,anchos,{congelar=true}={})=>{
+    const f=filas.map((cel,r)=>`<row r="${r+1}">`+cel.map((v,c)=>{
+      if(v==null||v==='') return '';
+      const ref=col(c)+(r+1), o=typeof v==='object'?v:{v};
+      const st=o.s?` s="${o.s}"`:'';
+      if(o.f) return `<c r="${ref}"${st}><f>${xe(o.f)}</f><v>${o.v||0}</v></c>`;
+      if(typeof o.v==='number') return `<c r="${ref}"${st}><v>${Math.round(o.v*100)/100}</v></c>`;
+      return `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xe(o.v)}</t></is></c>`;
+    }).join('')+'</row>').join('');
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`
+      +`<sheetViews><sheetView workbookViewId="0" showGridLines="0">${congelar?'<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>':''}</sheetView></sheetViews>`
+      +`<cols>${anchos.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${f}</sheetData></worksheet>`;
+  };
+  const H=t=>({v:t,s:1});
+  /* Itinerario */
+  const it=[[H('Día'),H('Hora'),H('Parada'),H('Nota'),H('Precio'),H('Estimado (S/)'),H('Hecho')]];
+  X_.dias.forEach(({d,ps})=>ps.forEach(p=>it.push([d.n,p.h,{v:p.t,s:6},{v:p.nota,s:7},p.costo,p.est?{v:p.est,s:2}:'',p.ok?'Sí':''])));
+  const n1=it.length;
+  it.push(['','',{v:'Total estimado',s:6},'','',{v:X_.estimado,f:`SUM(F2:F${n1})`,s:5},'']);
+  /* Gastos */
+  const ga=[[H('Día'),H('Descripción'),H('Sobre'),H('Pagado con'),H('Monto'),H('Moneda'),H('Soles')]];
+  X_.gastos.forEach(g=>ga.push([nomDia(g.dia),g.desc,g.cat,g.medio==='efectivo'?'Efectivo':g.medio==='tarjeta'?'Tarjeta':'',{v:g.monto},g.mon,{v:pesoDe(g),s:2}]));
+  const n2=ga.length;
+  ga.push(['',{v:'Total gastado',s:6},'','','','',{v:X_.gastado,f:`SUM(G2:G${Math.max(2,n2)})`,s:5}]);
+  /* Resumen */
+  const re=[[H('Sobre'),H('Tope (S/)'),H('Estimado (S/)'),H('Gastado (S/)'),H('Disponible (S/)')]];
+  X_.sobres.forEach((o,i)=>{ const r=i+2; re.push([o.c,o.c==='Pasajes'?'':{v:o.tope,s:2},o.c==='Pasajes'?'':{v:o.est,s:2},{v:o.real,s:2},o.c==='Pasajes'?'':{v:o.tope-o.real,f:`B${r}-D${r}`,s:2}]); });
+  const n3=re.length;
+  re.push([{v:'Total',s:6},{v:0,f:`SUM(B2:B${n3})`,s:5},{v:0,f:`SUM(C2:C${n3})`,s:5},{v:0,f:`SUM(D2:D${n3})`,s:5},{v:0,f:`SUM(E2:E${n3})`,s:5}]);
+  re.push([]);
+  re.push([{v:'Presupuesto total',s:4},{v:E.presupuesto,s:5}]);
+  re.push([{v:'Disponible',s:4},{v:X_.disponible,s:5}]);
+  re.push([{v:'Actualizado el',s:4},X_.hoy]);
+
+  const estilos=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`
+    +`<numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;S/ &quot;#,##0.00"/></numFmts>`
+    +`<fonts count="4"><font><sz val="11"/><color rgb="FF12171A"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF12171A"/><name val="Calibri"/></font><font><sz val="11"/><color rgb="FF6B7A78"/><name val="Calibri"/></font></fonts>`
+    +`<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0E7C7B"/><bgColor indexed="64"/></patternFill></fill></fills>`
+    +`<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFE3E9E8"/></bottom><diagonal/></border></borders>`
+    +`<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>`
+    +`<cellXfs count="8"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="top"/></xf>`
+    +`<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment vertical="center"/></xf>`
+    +`<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"><alignment vertical="top"/></xf>`
+    +`<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>`
+    +`<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>`
+    +`<xf numFmtId="164" fontId="2" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/>`
+    +`<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"><alignment vertical="top" wrapText="1"/></xf>`
+    +`<xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>`
+    +`<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const hojas=[['Itinerario',hoja(it,[13,7,38,48,16,14,7])],['Gastos',hoja(ga,[13,36,13,12,12,9,13])],['Resumen',hoja(re,[20,14,15,14,16])]];
+  return zipear([
+    ['[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${hojas.map((h,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`],
+    ['_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${hojas.map((h,i)=>`<sheet name="${h[0]}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`],
+    ['xl/_rels/workbook.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${hojas.map((h,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${hojas.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml',estilos],
+    ...hojas.map((h,i)=>[`xl/worksheets/sheet${i+1}.xml`,h[1]])
+  ]);
+}
+async function exportar(tipo,boton){
+  const txt=boton.textContent; boton.disabled=true; boton.textContent='Preparando…';
+  try{
+    const f=fechaBA(Date.now());
+    if(tipo==='pdf') await entregar(crearPDF(),`viaje-buenos-aires-${f}.pdf`,'Viaje a Buenos Aires');
+    else await entregar(crearXLSX(),`viaje-buenos-aires-${f}.xlsx`,'Viaje a Buenos Aires');
+  }catch(e){ console.error(e); avisar('No se pudo generar el archivo.'); }
+  boton.disabled=false; boton.textContent=txt;
+}
 
 /* ================= relojes ================= */
 function partesHora(tz,d){
