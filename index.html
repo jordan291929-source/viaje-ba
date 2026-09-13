@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="theme-color" content="#0E7C7B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Viaje BA">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="iconos/jsg-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="iconos/jsg-32.png">
+<title>Viaje BA · JSG</title>
+<style>
+  :root{
+    --teal:#0E7C7B; --teal-hondo:#0A5C5B; --teal-claro:#E6F1F0;
+    --bg:#F2F5F5; --card:#FFFFFF; --tinta:#12171A; --gris:#6B7A78; --linea:#E3E9E8;
+    --rojo:#C0392B; --ambar:#D68910; --verde:#1E8449;
+    --r:14px; --sombra:0 1px 2px rgba(18,23,26,.05), 0 4px 14px rgba(18,23,26,.05);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0}
+  html,body,button,a,input,select,label{touch-action:manipulation}
+  body{
+    background:var(--bg);color:var(--tinta);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:15px;line-height:1.45;padding-bottom:calc(76px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit}
+  .app{max-width:520px;margin:0 auto}
+
+  /* la cabecera solo deja espacio para la tarjeta de saldo en Inicio */
+  .cab{background:var(--teal);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;display:flex;align-items:center;gap:11px}
+  .app[data-v="inicio"] .cab{padding-bottom:58px}
+  .cab .logo{width:26px;height:30px;flex-shrink:0}
+  .cab .quien{flex:1;min-width:0}
+  .cab .hola{font-size:12.5px;opacity:.78;line-height:1.3}
+  .cab .titulo{font-size:16.5px;font-weight:600;line-height:1.3}
+  .cab .eng{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:99px;width:34px;height:34px;flex-shrink:0;cursor:pointer;display:grid;place-items:center}
+  .cab .eng svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.7}
+
+  .saldo{background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);margin:-44px 16px 0;padding:18px 18px 16px}
+  .saldo .rot{font-size:12.5px;color:var(--gris);margin:0 0 4px}
+  .saldo .num{font-size:33px;font-weight:700;letter-spacing:-.6px;margin:0;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;-webkit-touch-callout:none}
+  a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font:inherit!important}
+  .saldo .num.neg{color:var(--rojo)}
+  .saldo .pie{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--gris);font-variant-numeric:tabular-nums}
+  .barra{height:7px;background:var(--linea);border-radius:99px;overflow:hidden;margin:14px 0 10px}
+  .barra i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .3s ease}
+  .barra i.alerta{background:var(--ambar)} .barra i.mal{background:var(--rojo)}
+
+  /* cinta de tasa */
+  .cinta{display:flex;align-items:center;gap:10px;margin:12px 16px 0;padding:11px 10px 11px 14px;background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);font-size:13px}
+  .cinta .punto{width:7px;height:7px;border-radius:50%;background:var(--verde);flex-shrink:0}
+  .cinta .punto.viejo{background:var(--ambar)} .cinta .punto.off{background:#B9C4C2} .cinta .punto.mano{background:var(--teal)}
+  .cinta .txt{flex:1;min-width:0;line-height:1.35}
+  .cinta .txt b{font-weight:600;display:block}
+  .cinta .txt span{display:block;color:var(--gris);font-size:11.5px}
+  .cinta .recarga{background:none;border:0;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;color:var(--teal);flex-shrink:0;padding:0}
+  .cinta .recarga svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;display:block}
+  .cinta .recarga.girando svg{animation:giro 1s linear infinite}
+  @keyframes giro{to{transform:rotate(360deg)}}
+
+  /* relojes Lima / Buenos Aires */
+  .relojes{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:11px 14px;background:var(--card);border-radius:var(--r);box-shadow:var(--sombra)}
+  .reloj{flex:1;min-width:0;text-align:center}
+  .reloj span{display:block;font-size:11.5px;color:var(--gris);line-height:1.35}
+  .reloj b{display:block;font-size:22px;font-weight:700;letter-spacing:-.3px;line-height:1.25;font-variant-numeric:tabular-nums}
+  .relojes .dif{flex-shrink:0;font-size:11.5px;font-weight:600;color:var(--teal);background:var(--teal-claro);border-radius:99px;padding:3px 9px;white-space:nowrap}
+  .rapidas{display:flex;gap:8px;margin:12px 16px 0}
+  .rapidas button{flex:1;background:var(--card);border:0;border-radius:var(--r);box-shadow:var(--sombra);padding:13px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;min-width:0;white-space:nowrap;color:var(--tinta);line-height:1.25}
+  .rapidas .ic{width:36px;height:36px;border-radius:50%;background:var(--teal-claro);display:grid;place-items:center}
+  .rapidas svg{width:18px;height:18px;stroke:var(--teal);fill:none;stroke-width:1.8}
+
+  .bloque{background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);margin:14px 16px 0;padding:16px}
+  .tit{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;margin:0 0 10px;min-height:20px}
+  .tit a,.tit .enlace{font-size:12.5px;color:var(--teal);font-weight:500;text-decoration:none;cursor:pointer;background:none;border:0;padding:0}
+  .tit .cont{font-size:12.5px;color:var(--gris);font-weight:400;font-variant-numeric:tabular-nums}
+
+  /* filas: una sola regla de separadores y de aire para todas las listas */
+  .item,.chk,.lug,.sobre{border-top:1px solid var(--linea)}
+  :is(.item,.chk,.lug,.sobre):first-child,
+  .tit + :is(.item,.chk,.lug,.sobre){border-top:0;padding-top:4px}
+  :is(.item,.chk,.lug,.sobre,.paso,.salida):last-child{padding-bottom:0}
+
+  .item{display:flex;align-items:center;gap:12px;padding:11px 0}
+  .item .cuerpo{flex:1;min-width:0;display:block}
+  .item .t{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .s{display:block;font-size:12px;color:var(--gris);margin-top:1px}
+  .item .s.envuelve,.item .t.envuelve{white-space:normal}
+  .item .v{font-size:14.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .item .v.gris{color:var(--gris);font-weight:500}
+  .fila-btn .t{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35}
+  .fila-btn{width:100%;background:none;border-left:0;border-right:0;border-bottom:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+  .pic{width:36px;height:36px;border-radius:10px;background:var(--teal-claro);color:var(--teal);display:grid;place-items:center;flex-shrink:0;font-size:15px}
+  .item .enlace{flex-shrink:0;background:none;border:0;color:var(--teal);font-size:12.5px;font-weight:500;cursor:pointer;padding:6px 0 6px 4px}
+
+  .sobre{padding:12px 0}
+  .sobre .fila{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13.5px;margin-bottom:7px}
+  .sobre .fila b{font-weight:600}
+  .sobre .fila span{color:var(--gris);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sobre .extra{font-size:12px;color:var(--verde);margin-top:6px}
+  .mini{height:5px;background:var(--linea);border-radius:99px;overflow:hidden}
+  .mini i{display:block;height:100%;background:var(--teal);border-radius:99px}
+  .mini i.alerta{background:var(--ambar)} .mini i.mal{background:var(--rojo)}
+
+  .chk{display:flex;gap:12px;align-items:flex-start;padding:11px 0}
+  .caja{width:21px;height:21px;flex-shrink:0;margin-top:0;border:1.6px solid #C4CFCD;border-radius:6px;background:#fff;cursor:pointer;padding:0;display:grid;place-items:center}
+  .caja.on{background:var(--teal);border-color:var(--teal)}
+  .caja svg{width:12px;height:12px;stroke:#fff;stroke-width:2.6;fill:none;opacity:0}
+  .caja.on svg{opacity:1}
+  .chk .cuerpo{flex:1;min-width:0}
+  .chk .t{font-size:14.5px;line-height:21px} .chk .s{font-size:12.5px;color:var(--gris);margin-top:2px}
+  .chk.listo .t{color:var(--gris);text-decoration:line-through}
+  .chk .cuando{display:inline-block;margin-top:5px;font-size:11.5px;font-weight:600;line-height:1.5;border-radius:99px;padding:1px 9px;background:#FDF3E3;color:#8A5A00}
+  .chk .cuando.ya{background:var(--teal-claro);color:var(--teal-hondo)}
+
+  /* itinerario dinámico */
+  .dias-tabs{display:flex;gap:6px;margin:14px 16px 0}
+  .dias-tabs button{flex:1;min-width:0;background:var(--card);border:0;border-radius:12px;box-shadow:var(--sombra);padding:8px 2px 7px;cursor:pointer;color:var(--tinta);display:flex;flex-direction:column;align-items:center;position:relative}
+  .dias-tabs .dn{font-size:11.5px;color:var(--gris);line-height:1.3}
+  .dias-tabs .dd{font-size:17px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}
+  .dias-tabs button.on{background:var(--teal);color:#fff}
+  .dias-tabs button.on .dn{color:rgba(255,255,255,.82)}
+  .dias-tabs .hoy-punto{position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--ambar)}
+  .dia-tema{font-size:13px;color:var(--gris);margin:-6px 0 12px}
+  .dia-datos{display:flex;gap:8px}
+  .dia-datos div{flex:1;min-width:0;background:var(--bg);border-radius:10px;padding:8px 10px}
+  .dia-datos b{display:block;font-size:16px;font-weight:700;line-height:1.3;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dia-datos span{display:block;font-size:11.5px;color:var(--gris)}
+
+  .ruta{background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);margin:14px 16px 0;overflow:hidden}
+  .ruta-marco{position:relative;height:240px;background:#E8EFEE;overflow:hidden}
+  .ruta-marco .tile{position:absolute;width:256px;height:256px;max-width:none;pointer-events:none;user-select:none}
+  .ruta-marco svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .pin{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--teal);color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(18,23,26,.3);font-size:12px;font-weight:700;display:grid;place-items:center;cursor:pointer;padding:0;font-variant-numeric:tabular-nums;z-index:1}
+  .pin.hecha{background:#9AA8A6}
+  .pin.sel{background:var(--tinta);transform:scale(1.18);z-index:2}
+  .pin.casa{background:#fff;color:var(--teal);border:2px solid var(--teal);font-size:14px}
+  .ruta-attr{position:absolute;right:0;bottom:0;background:rgba(255,255,255,.82);font-size:10px;color:var(--gris);padding:1px 6px;border-top-left-radius:6px;z-index:3}
+  .segm.ruta-zona{position:absolute;left:10px;top:10px;margin:0;z-index:3;background:rgba(242,245,245,.96);box-shadow:0 1px 4px rgba(18,23,26,.15)}
+  .segm.ruta-zona button{flex:none;padding:6px 12px;font-size:12.5px;white-space:nowrap}
+  .ruta-pie{display:flex;align-items:center;gap:12px;padding:12px 16px 14px}
+  .ruta-pie .cuerpo{flex:1;min-width:0}
+  .ruta-pie .t{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ruta-pie .s{font-size:12px;color:var(--gris);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .parada{display:flex;gap:12px}
+  .riel{width:26px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+  .riel i{flex:1;width:2px;background:var(--linea);margin-top:4px;min-height:8px}
+  .parada:last-child .riel i{visibility:hidden}
+  .num{width:26px;height:26px;border-radius:50%;background:var(--teal-claro);color:var(--teal);font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .num.casa{font-size:14px}
+  .num.punto{background:none}
+  .num.punto::before{content:'';width:8px;height:8px;border-radius:50%;background:#B9C4C2}
+  .parada.sel .num:not(.punto){background:var(--teal);color:#fff}
+  .parada.hecha .num:not(.punto){background:var(--linea);color:var(--gris)}
+  .p-cuerpo{flex:1;min-width:0;padding-bottom:12px}
+  .parada:last-child .p-cuerpo{padding-bottom:0}
+  .p-cab{display:flex;align-items:center;gap:8px;height:26px}
+  .p-cab .hora{font-size:12px;font-weight:600;color:var(--teal);font-variant-numeric:tabular-nums}
+  .estado{font-size:11px;font-weight:600;border-radius:99px;padding:1px 8px;line-height:1.5}
+  .estado.ahora{background:var(--teal);color:#fff}
+  .estado.sig{background:var(--teal-claro);color:var(--teal-hondo)}
+  .p-nom{display:block;width:100%;background:none;border:0;padding:0;margin:0;text-align:left;font:inherit;font-size:15px;font-weight:600;color:var(--tinta);line-height:1.35;cursor:pointer}
+  .parada.sel .p-nom{color:var(--teal)}
+  .parada.hecha .p-nom{color:var(--gris);text-decoration:line-through;font-weight:500}
+  .p-nota{font-size:12.5px;color:var(--gris);margin-top:2px;line-height:1.45}
+  .p-nota.choca{color:var(--ambar)}
+  .p-pie{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin-top:5px;font-size:12.5px;line-height:1.5}
+  .p-pie .costo{color:var(--tinta);font-weight:500}
+  .p-pie a,.p-pie button{color:var(--teal);font-weight:500;text-decoration:none;background:none;border:0;padding:0;font-size:12.5px;line-height:1.5;cursor:pointer}
+  .parada .caja{margin-top:2.5px}
+  .p-est{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .p-est button{background:var(--bg);border:1px solid var(--linea);border-radius:99px;padding:3px 10px;font-size:12px;line-height:1.4;color:var(--tinta);cursor:pointer;font-variant-numeric:tabular-nums}
+  .p-est button b{font-weight:600}
+  .dia-presu{margin-top:12px;border-top:1px solid var(--linea);padding-top:10px}
+  .dia-presu .fila{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;padding:3px 0}
+  .dia-presu .fila span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dia-presu .fila.total{font-weight:600;border-top:1px solid var(--linea);margin-top:6px;padding-top:8px}
+  .dia-presu .fila .gris{color:var(--gris);font-weight:400}
+  .sobre .fila span.mal{color:var(--rojo)}
+  .est-fila{background:var(--bg);border-radius:12px;padding:10px;margin-bottom:8px}
+  .est-fila .duo{grid-template-columns:1fr 140px;gap:8px}
+  .est-fila .trio{display:grid;grid-template-columns:1fr 84px 40px;gap:8px;margin-top:8px}
+  .est-fila input,.est-fila select{background-color:#fff}
+  .est-fila .quitar-est{border:1px solid var(--linea);background:#fff;border-radius:10px;color:var(--gris);font-size:20px;line-height:1;cursor:pointer;height:48px;padding:0}
+  .btn.chico{padding:10px;font-size:14px;margin-bottom:13px}
+  .tramo{display:flex;gap:12px;align-items:center;min-height:30px}
+  .tramo .riel{align-self:stretch}
+  .tramo .riel i{margin:0;background:repeating-linear-gradient(to bottom,#C4CFCD 0 3px,transparent 3px 7px)}
+  .tramo span{font-size:12px;color:var(--gris);padding-bottom:12px}
+
+  .lug{display:flex;gap:12px;align-items:flex-start;padding:12px 0}
+  .lug .ver{flex:1;min-width:0;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;font:inherit}
+  .lug .n{display:block;font-size:14.5px;line-height:21px} .lug .d{display:block;font-size:12.5px;color:var(--gris);margin-top:1px}
+  .lug .p{font-size:12.5px;line-height:21px;color:var(--teal);font-weight:600;white-space:nowrap}
+  .lug.on .n{color:var(--gris);text-decoration:line-through}
+  .lug.sel .n{color:var(--teal);font-weight:600}
+  .casa-ic{width:21px;height:21px;flex-shrink:0;display:grid;place-items:center;color:var(--teal);font-size:17px;line-height:1}
+
+  .mapa{background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);margin:14px 16px 0;overflow:hidden}
+  .mapa-marco{position:relative;height:230px;background:var(--teal-claro)}
+  .mapa-marco iframe{display:block;width:100%;height:100%;border:0}
+  .mapa-off{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font-size:13px;color:var(--gris);background:var(--teal-claro)}
+  .mapa-pie{display:flex;align-items:center;gap:12px;padding:12px 16px 14px}
+  .mapa-pie .cuerpo{flex:1;min-width:0}
+  .mapa-pie .t{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mapa-pie .s{font-size:12px;color:var(--gris);margin-top:1px}
+  .pildora{flex-shrink:0;background:var(--teal);color:#fff;border-radius:99px;padding:8px 14px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+
+  .reserva{background:var(--teal-claro);border-radius:11px;padding:12px 14px;margin:0 0 12px}
+  .reserva .rt{font-size:11.5px;color:var(--teal-hondo);font-weight:600;letter-spacing:.2px;margin-bottom:2px}
+  .reserva .fila{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .reserva .n{font-size:15px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .reserva .v{font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .reserva .s{font-size:12.5px;color:var(--teal-hondo);margin-top:2px}
+  .reserva .btn{margin-top:10px;padding:11px}
+
+  .conv{background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);margin:14px 16px 0;padding:16px}
+  .segm{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:3px;margin-bottom:14px}
+  .segm.fondo{background:var(--linea);margin:14px 16px 0}
+  .segm.apagado{opacity:.5}
+  .segm button{flex:1;border:0;background:none;padding:9px 4px;border-radius:8px;font-size:13px;color:var(--gris);cursor:pointer}
+  .segm button.on{background:var(--card);color:var(--tinta);font-weight:600;box-shadow:0 1px 3px rgba(18,23,26,.09)}
+  .grande{width:100%;border:0;border-bottom:2px solid var(--linea);border-radius:0;background:none;font-size:30px;font-weight:700;padding:4px 0 8px;color:var(--tinta);letter-spacing:-.5px}
+  .grande:focus{outline:none;border-bottom-color:var(--teal);background:none}
+  .salida{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:13px 0;border-bottom:1px solid var(--linea)}
+  .salida:last-child{border-bottom:0}
+  .salida .et{font-size:13px;color:var(--gris)}
+  .salida .vl{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .salida .vl.destacado{color:var(--teal)}
+
+  .interr{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+  .interr .cuerpo{flex:1;min-width:0}
+  .interr .t{font-size:14.5px}
+  .interr .s{font-size:12.5px;color:var(--gris);margin-top:1px}
+  .sw{width:46px;height:28px;border-radius:99px;background:#C4CFCD;border:0;position:relative;cursor:pointer;flex-shrink:0;padding:0;transition:background .2s}
+  .sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+  .sw.on{background:var(--teal)} .sw.on::after{transform:translateX(18px)}
+
+  label{display:block;font-size:12.5px;color:var(--gris);margin:0 0 6px}
+  input,select{width:100%;background:var(--bg);border:1px solid var(--linea);border-radius:10px;padding:12px;font-size:16px;color:var(--tinta);font-family:inherit;height:48px;-webkit-appearance:none;appearance:none}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7A78' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+  input:focus,select:focus{outline:none;border-color:var(--teal);background-color:#fff}
+  .campo{margin-bottom:13px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .btn{width:100%;background:var(--teal);color:#fff;border:0;border-radius:11px;padding:14px;font-size:15px;font-weight:600;cursor:pointer}
+  .btn.sec{background:var(--bg);color:var(--tinta);border:1px solid var(--linea);font-weight:500}
+  .btn.peligro{background:#fff;color:var(--rojo);border:1px solid #F0D5D2;font-weight:500}
+  .btn+.btn{margin-top:9px}
+
+  .aviso{background:#FDF3E3;border-left:3px solid var(--ambar);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;margin:14px 16px 0;line-height:1.5}
+  .nota{font-size:12px;color:var(--gris);line-height:1.5;margin:10px 0 0}
+  .vacio{padding:12px 0 0;color:var(--gris);font-size:13.5px;text-align:center}
+  .envoltura{margin:14px 16px 0}
+
+  .velo{position:fixed;inset:0;background:rgba(18,23,26,.45);opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:40}
+  .velo.on{opacity:1;pointer-events:auto}
+  .hoja{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);border-radius:20px 20px 0 0;transform:translateY(100%);visibility:hidden;transition:transform .26s cubic-bezier(.32,.72,0,1),visibility 0s .26s;max-height:90vh;overflow-y:auto;padding:8px 16px calc(22px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto}
+  .hoja.on{transform:translateY(0);visibility:visible;transition:transform .26s cubic-bezier(.32,.72,0,1)}
+  .agarre{width:38px;height:4px;background:var(--linea);border-radius:99px;margin:6px auto 14px}
+  .hoja h3{font-size:16.5px;font-weight:600;margin:0 0 14px}
+  .hoja .chk:last-of-type{margin-bottom:4px}
+  .resu h4{font-size:12.5px;color:var(--gris);font-weight:600;margin:18px 0 0}
+  .resu .salida{padding:10px 0}
+  .resu .salida .vl{font-size:15px}
+  .resu .salida .et{font-size:13.5px;color:var(--tinta);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .resu .salida .et small{color:var(--gris);font-size:12px}
+
+  .toast{position:fixed;left:16px;right:16px;bottom:calc(72px + env(safe-area-inset-bottom));max-width:488px;margin:0 auto;background:var(--tinta);color:#fff;border-radius:12px;padding:6px 8px 6px 14px;min-height:46px;display:flex;align-items:center;gap:12px;font-size:14px;z-index:60;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}
+  .toast.on{opacity:1;transform:none;pointer-events:auto}
+  .toast span{flex:1;min-width:0}
+  .toast button{background:none;border:0;color:#8FD9D7;font-weight:600;font-size:14px;cursor:pointer;padding:8px 6px}
+
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:rgba(255,255,255,.97);border-top:1px solid var(--linea);padding-bottom:env(safe-area-inset-bottom);max-width:520px;margin:0 auto;backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px)}
+  nav button{flex:1;background:none;border:0;padding:9px 2px 10px;color:#98A5A3;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px}
+  nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7}
+  nav button.on{color:var(--teal)}
+  .vista{display:none;padding-bottom:18px}
+  .vista.on{display:block}
+  /* documentos */
+  .docs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .doc{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--bg);border:1px solid var(--linea);padding:0;cursor:pointer;font:inherit;color:inherit}
+  .doc img{width:100%;height:100%;object-fit:cover;display:block}
+  .doc .pdf{display:grid;place-items:center;height:100%;font-size:13px;font-weight:700;color:var(--rojo);letter-spacing:.5px}
+  .doc span{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(18,23,26,.78));color:#fff;font-size:11.5px;padding:16px 7px 6px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .doc.nuevo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-style:dashed;border-color:#B9C4C2;color:var(--teal);font-size:12.5px;font-weight:600;background:#fff}
+  .doc.nuevo b{font-size:24px;font-weight:400;line-height:1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px}
+  .chips button{border:1px solid var(--linea);background:var(--bg);border-radius:99px;padding:7px 12px;font-size:13px;color:var(--tinta);cursor:pointer}
+  .chips button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .hoja h4{font-size:12.5px;color:var(--gris);font-weight:600;margin:18px 0 4px}
+  .visor{position:fixed;inset:0;z-index:70;background:#0B0F11;display:flex;flex-direction:column}
+  .visor-cab{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;color:#fff}
+  .visor-cab b{flex:1;min-width:0;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+  .visor-cab button,.visor-cab a{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:99px;padding:8px 12px;font-size:13px;cursor:pointer;text-decoration:none;white-space:nowrap}
+  .visor-cab button.peligro{color:#FFB4A8}
+  .visor-cuerpo{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 0 env(safe-area-inset-bottom);overflow:auto;touch-action:pinch-zoom}
+  .visor-cuerpo img{max-width:100%;max-height:100%;object-fit:contain;touch-action:pinch-zoom}
+  .visor-cuerpo iframe{width:100%;height:100%;border:0;background:#fff}
+  /* emergencias */
+  .taxista{background:var(--teal);color:#fff;border-radius:12px;padding:14px;margin-bottom:4px}
+  .taxista .rt{font-size:12px;opacity:.85}
+  .taxista .dir{font-size:19px;font-weight:700;line-height:1.3;margin:2px 0 10px}
+  .taxista button{background:#fff;color:var(--teal);border:0;border-radius:99px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .grande-taxi{position:fixed;inset:0;z-index:80;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:32px 24px;text-align:center;cursor:pointer}
+  .grande-taxi .rt{font-size:22px;color:var(--gris)}
+  .grande-taxi .dir{font-size:40px;font-weight:800;line-height:1.2;margin:14px 0;color:var(--tinta)}
+  .grande-taxi .s{font-size:19px;color:var(--gris)}
+  .tel{flex-shrink:0;background:var(--teal-claro);color:var(--teal-hondo);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tel.rojo{background:#FBE9E7;color:var(--rojo)}
+  /* billetera */
+  .billetera{display:flex;gap:8px}
+  .billetera div{flex:1;min-width:0;background:var(--bg);border-radius:10px;padding:9px 10px}
+  .billetera span{display:block;font-size:11.5px;color:var(--gris)}
+  .billetera b{display:block;font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;line-height:1.35}
+  .billetera b.neg{color:var(--rojo)}
+  /* clima */
+  .dia-clima{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:10px;padding:9px 12px;margin:0 0 10px;font-size:13px;line-height:1.4}
+  .dia-clima .ic{font-size:22px;line-height:1;flex-shrink:0}
+  .dia-clima .cuerpo{flex:1;min-width:0}
+  .dia-clima b{font-variant-numeric:tabular-nums}
+  .dia-clima .s{color:var(--gris);font-size:12px}
+  textarea{width:100%;min-height:110px;background:var(--bg);border:1px solid var(--linea);border-radius:10px;padding:12px;font-size:16px;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--tinta);resize:vertical}
+  textarea:focus{outline:none;border-color:var(--teal);background:#fff}
+  .segm.medio{margin-bottom:13px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app" data-v="inicio">
+
+  <header class="cab">
+    <svg class="logo" viewBox="0 0 56 64" aria-hidden="true">
+      <path d="M34 22 V44 a12 12 0 0 1 -21 7.8" stroke="#fff" stroke-width="8.5" fill="none"/>
+      <path d="M34 6 L45.5 24 H22.5 Z" fill="#fff"/>
+    </svg>
+    <div class="quien">
+      <div class="hola" id="cuenta">Buenos Aires · 20–25 nov</div>
+      <div class="titulo">Viaje de Jordan</div>
+    </div>
+    <button class="eng" id="abrir-sos" aria-label="Emergencias">
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-2.9 8.3-7 10-4.1-1.7-7-5.6-7-10V6z"/><path d="M12 8v5M12 16.5v.01"/></svg>
+    </button>
+    <button class="eng" id="abrir-ajustes" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1V21a2 2 0 11-4 0v-.1A1.6 1.6 0 006.5 19.4l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.6 1.6 0 003 13.9a2 2 0 010-4h.1A1.6 1.6 0 004.6 6.5l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 002.7-1.1V3a2 2 0 114 0v.1a1.6 1.6 0 002.7 1.1l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 001.1 2.7H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1.3z"/></svg>
+    </button>
+  </header>
+
+  <!-- ============ INICIO ============ -->
+  <section class="vista on" id="v-inicio">
+    <div class="saldo">
+      <p class="rot">Disponible para el viaje</p>
+      <p class="num" id="saldo">S/ 0</p>
+      <div class="barra"><i id="barra" style="width:0%"></i></div>
+      <div class="pie"><span id="pie-izq">—</span><span id="pie-der">—</span></div>
+    </div>
+
+    <div class="cinta" id="cinta">
+      <span class="punto off"></span>
+      <span class="txt"><b>Buscando cotización…</b><span>&nbsp;</span></span>
+      <button class="recarga" aria-label="Actualizar cotización">
+        <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-1.8 6M20 5v6h-6"/></svg>
+      </button>
+    </div>
+
+    <div class="relojes" aria-live="off">
+      <div class="reloj"><span>Lima</span><b id="hora-pe">--:--</b><span id="dia-pe">&nbsp;</span></div>
+      <span class="dif" id="hora-dif">+2 h</span>
+      <div class="reloj"><span>Buenos Aires</span><b id="hora-ar">--:--</b><span id="dia-ar">&nbsp;</span></div>
+    </div>
+
+    <div class="rapidas">
+      <button data-nuevo-gasto><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Anotar</button>
+      <button data-ir="cambio"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 9h15l-4-4M20 15H5l4 4"/></svg></span>Convertir</button>
+      <button data-hoy><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Hoy</button>
+      <button data-docs><span class="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></span>Documentos</button>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Antes de viajar <span class="cont" id="pct-listo"></span></div>
+      <div id="lista-previo"></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Siguiente en la ruta <a data-ir="dias">Ver todo</a></div>
+      <div id="proximo"></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Últimos movimientos <a data-ir="gastos">Ver todo</a></div>
+      <div id="ultimos"></div>
+    </div>
+  </section>
+
+  <!-- ============ GASTOS ============ -->
+  <section class="vista" id="v-gastos">
+    <div class="segm fondo" id="modo-gastos">
+      <button data-modo="sobres" class="on">Por sobre</button>
+      <button data-modo="dias">Por día</button>
+    </div>
+
+    <div id="g-por-sobre">
+      <div class="bloque">
+        <div class="tit">Sobres del viaje</div>
+        <p class="nota" style="margin:-4px 0 8px">Reparto de lo que queda después de los pasajes. Los topes se editan en ajustes.</p>
+        <div id="sobres"></div>
+      </div>
+      <div class="bloque">
+        <div class="tit">Alojamiento <a data-aloj-nueva>Agregar opción</a></div>
+        <div id="aloj"></div>
+      </div>
+      <div class="bloque">
+        <div class="tit">Movimientos <a data-nuevo-gasto>Anotar</a></div>
+        <div id="lista-gastos"></div>
+      </div>
+    </div>
+
+    <div id="g-por-dia" hidden>
+      <div class="bloque">
+        <div class="tit">Gasto por día <span class="cont" id="prom-dia"></span></div>
+        <div id="resumen-dias"></div>
+      </div>
+      <div id="dias-gastos"></div>
+    </div>
+
+    <div class="envoltura"><button class="btn sec" id="abrir-resumen">Resumen y exportar</button></div>
+  </section>
+
+  <!-- ============ DÍAS ============ -->
+  <section class="vista" id="v-dias">
+    <div class="dias-tabs" id="dias-tabs"></div>
+    <div class="aviso" id="dia-aviso" hidden></div>
+    <div class="bloque">
+      <div class="tit"><span id="dia-titulo">—</span><span class="cont" id="dia-progreso"></span></div>
+      <div class="dia-tema" id="dia-tema"></div>
+      <div class="dia-clima" id="dia-clima" hidden></div>
+      <div class="dia-datos" id="dia-datos"></div>
+      <div class="dia-presu" id="dia-presu" hidden></div>
+    </div>
+    <div class="ruta" id="ruta">
+      <div class="ruta-marco" id="ruta-marco"></div>
+      <div class="ruta-pie">
+        <div class="cuerpo"><div class="t" id="ruta-nom">Ruta del día</div><div class="s" id="ruta-sub">Toca un número para ver la parada</div></div>
+        <a class="pildora" id="ruta-ir" target="_blank" rel="noopener">Ruta en Maps</a>
+      </div>
+    </div>
+    <div class="bloque">
+      <div class="tit">Paradas <button class="enlace" data-paso-nuevo>Agregar</button></div>
+      <div id="dia-linea"></div>
+    </div>
+    <div class="bloque">
+      <div class="tit">Estimado de todo el viaje <span class="cont" id="viaje-est-total"></span></div>
+      <p class="nota" style="margin:-4px 0 8px">Lo que cuesta el plan para los dos, con la cotización de hoy, contra tus sobres.</p>
+      <div id="viaje-est"></div>
+    </div>
+  </section>
+
+  <!-- ============ CAMBIO ============ -->
+  <section class="vista" id="v-cambio">
+    <div class="conv">
+      <div class="segm" id="segm"></div>
+      <label for="c-monto" id="c-lbl">Monto</label>
+      <input class="grande" id="c-monto" type="number" inputmode="decimal" value="10000">
+      <div id="c-salida" style="margin-top:4px"></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Tu efectivo <button class="enlace" id="bil-ajustar">Con cuánto salen</button></div>
+      <div class="billetera" id="bil-saldos"></div>
+      <div id="bil-cambios"></div>
+      <div style="margin-top:12px"><button class="btn sec" id="bil-cambio">Registrar un cambio de moneda</button></div>
+      <p class="nota" id="bil-nota"></p>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Cotizaciones de hoy <a id="c-refrescar">Actualizar</a></div>
+      <div id="tabla-tasas"></div>
+      <p class="nota" id="c-origen">—</p>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Qué cotización usar</div>
+      <div class="segm" id="segm-fuente"></div>
+      <p class="nota" style="margin-top:0" id="explica-fuente"></p>
+    </div>
+
+    <div class="bloque">
+      <div class="interr">
+        <div class="cuerpo"><div class="t">Usar mis tasas</div><div class="s">Las que te dio la casa de cambio</div></div>
+        <button class="sw" id="r-manual" role="switch" aria-checked="false" aria-label="Usar mis tasas"></button>
+      </div>
+      <div class="duo">
+        <div class="campo"><label for="r-usdpen">1 dólar en soles</label><input id="r-usdpen" type="number" inputmode="decimal" step="0.001"></div>
+        <div class="campo"><label for="r-arsusd">1 dólar en pesos arg.</label><input id="r-arsusd" type="number" inputmode="decimal" step="1"></div>
+      </div>
+      <button class="btn sec" id="r-save">Guardar y usar mis tasas</button>
+      <p class="nota">Mientras esté activado, la app no cambia tus tasas aunque haya internet. Los gastos ya anotados nunca se recalculan.</p>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Cuánto cuesta allá</div>
+      <div id="precios"></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Cómo llevar la plata</div>
+      <div class="item"><span class="pic">$</span><div class="cuerpo"><div class="t">Efectivo en dólares</div><div class="s">Billetes de 100, sin roturas ni sellos.</div></div></div>
+      <div class="item"><span class="pic">⌂</span><div class="cuerpo"><div class="t">El hotel con tarjeta</div><div class="s">Si el hotel está inscripto y pagas con tarjeta emitida en Perú, no pagas el 21% de IVA. Airbnb no califica.</div></div></div>
+      <div class="item"><span class="pic">◷</span><div class="cuerpo"><div class="t">Cambia de a poco</div><div class="s">Lo de dos o tres días por vez.</div></div></div>
+      <div class="item"><span class="pic">◉</span><div class="cuerpo"><div class="t">Tarjeta SUBE</div><div class="s">Para subte y colectivos. Se compra en kioscos y se carga con efectivo.</div></div></div>
+    </div>
+  </section>
+
+  <!-- ============ GUÍA ============ -->
+  <section class="vista" id="v-lugares">
+    <div class="mapa" id="mapa">
+      <div class="mapa-marco">
+        <iframe id="mapa-frame" title="Mapa de Buenos Aires" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div class="mapa-off" id="mapa-off" hidden>Sin internet el mapa no carga. “Cómo llegar” igual abre Google Maps.</div>
+      </div>
+      <div class="mapa-pie">
+        <div class="cuerpo"><div class="t" id="mapa-nom">Buenos Aires</div><div class="s" id="mapa-sub">Toca un lugar de la lista para verlo aquí</div></div>
+        <a class="pildora" id="mapa-ir" target="_blank" rel="noopener" hidden>Cómo llegar</a>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Lugares <button class="enlace" id="cerca">Cerca de mí</button></div>
+      <p class="nota" style="margin:-4px 0 8px" id="cont-lug"></p>
+      <div id="lista-lugares"></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Cómo moverse</div>
+      <div class="item"><span class="pic">◉</span><div class="cuerpo">
+        <div class="t">Tarjeta SUBE, lo primero</div>
+        <div class="s">Sin ella no subes al subte ni al colectivo. Se compra en kioscos y estaciones, y se carga con efectivo. Con una sola pueden pagar los dos pasajes en el colectivo.</div></div></div>
+      <div class="item"><span class="pic">Ⓜ</span><div class="cuerpo">
+        <div class="t">Subte</div>
+        <div class="s">Seis líneas, A a E más la H. Arranca temprano y cierra cerca de las 23:00. Los domingos abre más tarde.</div></div></div>
+      <div class="item"><span class="pic">⌁</span><div class="cuerpo">
+        <div class="t">Colectivo</div>
+        <div class="s">Le dices al chofer hasta dónde vas antes de apoyar la SUBE, porque el precio cambia según la distancia.</div></div></div>
+      <div class="item"><span class="pic">⇄</span><div class="cuerpo">
+        <div class="t">Taxi y apps</div>
+        <div class="s">Los taxis son negros y amarillos, con reloj a la vista; de 22 a 6 h cobran 20% más. Uber, Cabify y DiDi funcionan y suelen salir más baratos.</div></div></div>
+      <div class="item"><span class="pic">⚑</span><div class="cuerpo">
+        <div class="t">Desde Ezeiza</div>
+        <div class="s">Lo más barato: UberX desde la zona señalizada al salir de Arribos, unos $39.000 de promedio. Plan B: taxi oficial prepago del mostrador, $60.000 fijo. Nunca con quien ofrece viaje en la puerta.</div></div>
+        <button class="enlace" data-punto="eze">Mapa</button></div>
+      <div class="item"><span class="pic">✈</span><div class="cuerpo">
+        <div class="t">Hacia Aeroparque</div>
+        <div class="s">La vuelta sale de Aeroparque, junto al río. Reserven un Uber con días de anticipación (Uber Reserve), unos $12.000 a $15.000. Plan B: radiotaxi pedido la noche anterior.</div></div>
+        <button class="enlace" data-punto="aep">Mapa</button></div>
+      <div class="item"><span class="pic">◍</span><div class="cuerpo">
+        <div class="t">A pie</div>
+        <div class="s">Microcentro, San Telmo, Recoleta y Palermo son planos y se caminan. Van a caminar más de lo que creen.</div></div></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Propinas</div>
+      <div class="item"><div class="cuerpo">
+        <div class="t">En restaurantes, 10%</div>
+        <div class="s">En efectivo y sobre la mesa. Casi nunca se puede sumar a la tarjeta.</div></div></div>
+      <div class="item"><div class="cuerpo">
+        <div class="t">El "cubierto" no es propina</div>
+        <div class="s">Es un cargo fijo por el pan y el servicio que ya viene en la cuenta. Es normal y no se discute.</div></div></div>
+      <div class="item"><div class="cuerpo">
+        <div class="t">Taxis</div>
+        <div class="s">Se redondea para arriba y listo. No se espera más.</div></div></div>
+      <div class="item"><div class="cuerpo">
+        <div class="t">Lleva billetes chicos</div>
+        <div class="s">Falta cambio en todos lados. Un billete grande para pagar algo chico es un problema diario.</div></div></div>
+    </div>
+
+    <div class="bloque">
+      <div class="tit">Cómo hablan</div>
+      <div id="frases"></div>
+    </div>
+  </section>
+</div>
+
+<nav>
+  <button data-v="inicio" class="on"><svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 20z"/></svg>Inicio</button>
+  <button data-v="gastos"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10.5h19"/></svg>Gastos</button>
+  <button data-v="dias"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Días</button>
+  <button data-v="cambio"><svg viewBox="0 0 24 24"><path d="M4 9h15l-4-4M20 15H5l4 4"/></svg>Cambio</button>
+  <button data-v="lugares"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Guía</button>
+</nav>
+
+<div class="velo" id="velo"></div>
+<div class="toast" id="toast" role="status"><span></span><button type="button">Deshacer</button></div>
+
+<div class="hoja" id="hoja-gasto">
+  <div class="agarre"></div>
+  <h3 id="g-titulo">Anotar un gasto</h3>
+  <div class="campo"><label for="g-desc">En qué</label><input id="g-desc" placeholder="Cena en el bodegón" autocomplete="off"></div>
+  <div class="duo">
+    <div class="campo"><label for="g-monto">Monto</label><input id="g-monto" type="number" inputmode="decimal" placeholder="0" min="0"></div>
+    <div class="campo"><label for="g-mon">Moneda</label><select id="g-mon"><option value="ARS">Pesos arg.</option><option value="USD">Dólares</option><option value="PEN">Soles</option></select></div>
+  </div>
+  <div class="duo">
+    <div class="campo"><label for="g-cat">Sobre</label><select id="g-cat"></select></div>
+    <div class="campo"><label for="g-dia">Día</label><select id="g-dia"></select></div>
+  </div>
+  <label>Pagado con</label>
+  <div class="segm medio" id="g-medio"><button type="button" data-medio="efectivo">Efectivo</button><button type="button" data-medio="tarjeta">Tarjeta</button></div>
+  <p class="nota" id="g-eq" style="margin:-4px 0 13px">&nbsp;</p>
+  <button class="btn" id="g-add">Anotar</button>
+  <button class="btn peligro" id="g-borrar" hidden>Borrar gasto</button>
+</div>
+
+<div class="hoja" id="hoja-paso">
+  <div class="agarre"></div>
+  <h3 id="i-titulo">Agregar parada</h3>
+  <div class="duo">
+    <div class="campo"><label for="i-dia">Día</label><select id="i-dia"></select></div>
+    <div class="campo"><label for="i-hora">Hora</label><input id="i-hora" type="time"></div>
+  </div>
+  <div class="campo"><label for="i-txt">Qué</label><input id="i-txt" placeholder="Museo de Bellas Artes" autocomplete="off"></div>
+  <div class="campo"><label for="i-lugar">Lugar en el mapa</label><select id="i-lugar"></select></div>
+  <div class="campo"><label for="i-dir">O escribe la dirección</label><input id="i-dir" placeholder="Av. del Libertador 1473" autocomplete="off"></div>
+  <div class="duo">
+    <div class="campo"><label for="i-costo">Precio</label><input id="i-costo" placeholder="Gratis, USD 10 c/u" autocomplete="off"></div>
+    <div class="campo"><label for="i-nota">Nota</label><input id="i-nota" placeholder="Opcional" autocomplete="off"></div>
+  </div>
+  <label>Gasto estimado para los dos</label>
+  <div id="i-est"></div>
+  <button class="btn sec chico" id="i-est-mas" type="button">Agregar un monto estimado</button>
+  <p class="nota" id="i-estado" style="margin:-4px 0 12px">&nbsp;</p>
+  <button class="btn" id="i-add">Agregar</button>
+  <button class="btn peligro" id="i-quitar" hidden>Quitar parada</button>
+</div>
+
+<div class="hoja" id="hoja-aloj">
+  <div class="agarre"></div>
+  <h3 id="al-titulo">Opción de alojamiento</h3>
+  <div class="campo"><label for="al-nombre">Nombre</label><input id="al-nombre" placeholder="Hotel en Recoleta" autocomplete="off"></div>
+  <div class="duo">
+    <div class="campo"><label for="al-barrio">Barrio</label><input id="al-barrio" placeholder="Recoleta" autocomplete="off"></div>
+    <div class="campo"><label for="al-noches">Noches</label><input id="al-noches" type="number" inputmode="numeric" min="1" step="1"></div>
+  </div>
+  <div class="duo">
+    <div class="campo"><label for="al-precio">Precio por noche</label><input id="al-precio" type="number" inputmode="decimal" placeholder="0" min="0"></div>
+    <div class="campo"><label for="al-mon">Moneda</label><select id="al-mon"><option value="USD">Dólares</option><option value="ARS">Pesos arg.</option><option value="PEN">Soles</option></select></div>
+  </div>
+  <div class="campo"><label for="al-dir">Dirección</label><input id="al-dir" placeholder="Para abrirla en el mapa" autocomplete="off"></div>
+  <div class="campo"><label for="al-link">Enlace de la reserva</label><input id="al-link" type="url" placeholder="Opcional" autocomplete="off"></div>
+  <div id="al-flags"></div>
+  <p class="nota" id="al-calc" style="margin:6px 0 14px">&nbsp;</p>
+  <button class="btn" id="al-save">Guardar opción</button>
+  <button class="btn sec" id="al-elegir" hidden>Elegir esta</button>
+  <button class="btn peligro" id="al-quitar" hidden>Quitar opción</button>
+</div>
+
+<div class="hoja" id="hoja-resumen">
+  <div class="agarre"></div>
+  <h3>Resumen del viaje</h3>
+  <div class="resu" id="resumen"></div>
+  <div style="height:16px"></div>
+  <button class="btn" id="x-compartir">Compartir resumen</button>
+  <button class="btn sec" id="x-csv">Descargar gastos en Excel (CSV)</button>
+</div>
+
+<div class="hoja" id="hoja-docs">
+  <div class="agarre"></div>
+  <h3>Documentos sin internet</h3>
+  <p class="nota" style="margin:-8px 0 12px">Se guardan dentro de la app, en este celular. Ábrelos aunque no tengas señal.</p>
+  <div class="docs" id="docs-lista"></div>
+  <input type="file" id="doc-archivo" accept="image/*,application/pdf" hidden>
+  <div id="doc-nuevo" hidden>
+    <h4>Qué documento es</h4>
+    <div class="chips" id="doc-chips"></div>
+    <div class="campo"><label for="doc-nombre">Nombre</label><input id="doc-nombre" autocomplete="off"></div>
+    <button class="btn" id="doc-guardar">Guardar documento</button>
+    <button class="btn sec" id="doc-cancelar">Cancelar</button>
+  </div>
+  <p class="nota" id="doc-espacio">&nbsp;</p>
+</div>
+
+<div class="visor" id="visor" hidden>
+  <div class="visor-cab">
+    <button id="visor-cerrar">Cerrar</button>
+    <b id="visor-nom"></b>
+    <button id="visor-compartir">Compartir</button>
+    <button class="peligro" id="visor-borrar">Borrar</button>
+  </div>
+  <div class="visor-cuerpo" id="visor-cuerpo"></div>
+</div>
+
+<div class="hoja" id="hoja-sos">
+  <div class="agarre"></div>
+  <h3>Emergencias</h3>
+  <div class="taxista"><div class="rt">Para mostrarle al taxista</div><div class="dir" id="sos-dir">—</div><button id="sos-grande">Mostrar en grande</button></div>
+  <h4>En Buenos Aires</h4><div id="sos-ba"></div>
+  <h4>Perú en Argentina</h4><div id="sos-peru"></div>
+  <h4>En Colonia, Uruguay</h4><div id="sos-uy"></div>
+  <h4>Tu seguro de viaje</h4>
+  <div id="sos-seguro"></div>
+  <div class="duo">
+    <div class="campo"><label for="sos-seg">Aseguradora</label><input id="sos-seg" autocomplete="off"></div>
+    <div class="campo"><label for="sos-segtel">Teléfono 24 h</label><input id="sos-segtel" type="tel" autocomplete="off"></div>
+  </div>
+  <div class="campo"><label for="sos-poliza">Número de póliza</label><input id="sos-poliza" autocomplete="off"></div>
+  <h4>Contacto en Perú</h4>
+  <div class="duo">
+    <div class="campo"><label for="sos-cnom">Nombre</label><input id="sos-cnom" autocomplete="off"></div>
+    <div class="campo"><label for="sos-ctel">Teléfono</label><input id="sos-ctel" type="tel" autocomplete="off"></div>
+  </div>
+  <button class="btn" id="sos-guardar">Guardar</button>
+</div>
+<div class="grande-taxi" id="grande-taxi" hidden>
+  <div class="rt">Por favor, llévenos a:</div>
+  <div class="dir" id="gt-dir"></div>
+  <div class="s" id="gt-barrio"></div>
+  <div class="s" style="margin-top:32px;font-size:14px">Toca para cerrar</div>
+</div>
+
+<div class="hoja" id="hoja-bil">
+  <div class="agarre"></div>
+  <h3>Efectivo con el que salen de Lima</h3>
+  <div class="duo">
+    <div class="campo"><label for="bil-usd">Dólares</label><input id="bil-usd" type="number" inputmode="decimal" min="0" placeholder="0"></div>
+    <div class="campo"><label for="bil-pen">Soles</label><input id="bil-pen" type="number" inputmode="decimal" min="0" placeholder="0"></div>
+  </div>
+  <div class="campo"><label for="bil-ars">Pesos argentinos</label><input id="bil-ars" type="number" inputmode="decimal" min="0" placeholder="0"></div>
+  <p class="nota" style="margin:-4px 0 13px">El saldo baja solo con los gastos que anotes como pagados en efectivo y con los cambios de moneda.</p>
+  <button class="btn" id="bil-guardar">Guardar</button>
+</div>
+
+<div class="hoja" id="hoja-cambio">
+  <div class="agarre"></div>
+  <h3 id="cm-titulo">Registrar un cambio</h3>
+  <div class="duo">
+    <div class="campo"><label for="cm-de">Entregaste</label><input id="cm-de" type="number" inputmode="decimal" min="0" placeholder="100"></div>
+    <div class="campo"><label for="cm-demon">Moneda</label><select id="cm-demon"><option value="USD">Dólares</option><option value="PEN">Soles</option><option value="ARS">Pesos arg.</option></select></div>
+  </div>
+  <div class="duo">
+    <div class="campo"><label for="cm-a">Recibiste</label><input id="cm-a" type="number" inputmode="decimal" min="0" placeholder="150000"></div>
+    <div class="campo"><label for="cm-amon">Moneda</label><select id="cm-amon"><option value="ARS">Pesos arg.</option><option value="USD">Dólares</option><option value="PEN">Soles</option></select></div>
+  </div>
+  <div class="campo"><label for="cm-dia">Día</label><select id="cm-dia"></select></div>
+  <p class="nota" id="cm-tasa" style="margin:-4px 0 12px">&nbsp;</p>
+  <div class="interr">
+    <div class="cuerpo"><div class="t">Usar esta tasa en mis cuentas</div><div class="s">Los gastos nuevos se calculan con lo que te dieron</div></div>
+    <button class="sw" id="cm-usar" role="switch" aria-checked="false" aria-label="Usar esta tasa"></button>
+  </div>
+  <button class="btn" id="cm-guardar">Guardar cambio</button>
+  <button class="btn peligro" id="cm-borrar" hidden>Borrar cambio</button>
+</div>
+
+<div class="hoja" id="hoja-restaurar">
+  <div class="agarre"></div>
+  <h3>Restaurar un respaldo</h3>
+  <p class="nota" style="margin:-8px 0 12px">Reemplaza todos los datos de este celular. Lo que tienes ahora queda guardado por si te arrepientes.</p>
+  <button class="btn sec" id="rs-elegir">Elegir archivo de respaldo</button>
+  <input type="file" id="rs-archivo" accept="application/json,.json,text/plain" hidden>
+  <div class="campo" style="margin-top:13px"><label for="rs-texto">O pega el texto del respaldo</label><textarea id="rs-texto" autocomplete="off" spellcheck="false"></textarea></div>
+  <p class="nota" id="rs-estado" style="margin:-4px 0 12px">&nbsp;</p>
+  <button class="btn" id="rs-aplicar">Restaurar</button>
+</div>
+
+<div class="hoja" id="hoja-ajustes">
+  <div class="agarre"></div>
+  <h3>Ajustes</h3>
+  <div class="campo"><label for="a-presu">Presupuesto total (soles)</label><input id="a-presu" type="number" inputmode="decimal"></div>
+  <label>Topes por sobre (soles)</label>
+  <div id="a-sobres"></div>
+  <p class="nota" id="a-suma" style="margin:2px 0 14px">&nbsp;</p>
+  <button class="btn" id="a-save">Guardar</button>
+  <h4>Respaldo</h4>
+  <button class="btn sec" id="a-archivo">Guardar respaldo en archivo</button>
+  <button class="btn sec" id="a-copiar">Copiar respaldo como texto</button>
+  <button class="btn sec" id="a-restaurar">Restaurar un respaldo</button>
+  <p class="nota">Para pasar el plan a otro celular: guarda el archivo, mándalo y restáuralo allá. Los documentos no van en el respaldo.</p>
+  <h4>Zona de riesgo</h4>
+  <button class="btn peligro" id="a-reset">Empezar de cero</button>
+</div>
+
+<script>
+/* ================= almacenamiento ================= */
+const CLAVE='viaje-ba:v3'; let cache=null;
+/* Usa el almacén del entorno si existe; publicada en un servidor, guarda en el propio navegador. */
+const almacen={
+  async leer(){ if(cache)return cache;
+    try{ if(window.storage){const r=await window.storage.get(CLAVE); if(r&&r.value){cache=JSON.parse(r.value);return cache;}} }
+    catch(e){}
+    try{ const s=localStorage.getItem(CLAVE); if(s){cache=JSON.parse(s);return cache;} }catch(e){}
+    return null; },
+  async guardar(e){ cache=e; const s=JSON.stringify(e);
+    try{ if(window.storage){ await window.storage.set(CLAVE,s); return; } }catch(err){}
+    try{ localStorage.setItem(CLAVE,s); }catch(err){ console.warn('no guardó',err); } }
+};
+
+/* ================= datos base ================= */
+const VER=12;
+const TZ='America/Argentina/Buenos_Aires';
+const DIAS=[
+  {id:'d21',f:'2026-11-21',n:'Sábado 21',s:'Caminata por el centro para ambientarse'},
+  {id:'d22',f:'2026-11-22',n:'Domingo 22',s:'Viaje a Uruguay · Colonia del Sacramento'},
+  {id:'d23',f:'2026-11-23',n:'Lunes 23',s:'Recoleta y los parques de Palermo'},
+  {id:'d24',f:'2026-11-24',n:'Martes 24',s:'San Telmo, La Boca y despedida'},
+  {id:'d25',f:'2026-11-25',n:'Miércoles 25',s:'Vuelo de regreso'}
+];
+/* días a los que se puede asignar un gasto */
+const DIAS_G=[{f:'previo',n:'Antes del viaje'},{f:'2026-11-20',n:'Viernes 20'}].concat(DIAS.map(d=>({f:d.f,n:d.n})));
+const CATS=['Alojamiento','Comida','Transporte','Paseos','Compras','Seguro','Otros'];
+const ICONO={Alojamiento:'⌂',Comida:'◍',Transporte:'⇄',Paseos:'◈',Compras:'▣',Seguro:'✚',Otros:'•',Pasajes:'✈'};
+const FUENTES={
+  blue:{et:'Blue',ex:'La tasa del efectivo. Es la que te van a dar al cambiar dólares billete en una casa de cambio.'},
+  oficial:{et:'Oficial',ex:'La de los bancos. Sirve de referencia y para lo que saques del cajero.'},
+  tarjeta:{et:'Tarjeta',ex:'La que te cobra tu tarjeta peruana al pagar en pesos: un poco menos que el dólar MEP. Tu banco puede sumar una comisión.'}
+};
+const NOM_FUENTE={blue:'blue',oficial:'oficial',tarjeta:'tarjeta',manual:'tus tasas'};
+const IVA=0.21;
+
+/* coordenadas para el mapa; q es lo que se busca en Google Maps */
+const GEO={
+  'Cementerio de la Recoleta':{ll:[-34.5875,-58.3934],q:'Cementerio de la Recoleta, Buenos Aires'},
+  'Feria de San Telmo':{ll:[-34.6206,-58.3717],q:'Plaza Dorrego, San Telmo, Buenos Aires'},
+  'Caminito':{ll:[-34.6392,-58.3630],q:'Caminito, La Boca, Buenos Aires'},
+  'Teatro Colón':{ll:[-34.6010,-58.3831],q:'Teatro Colón, Buenos Aires'},
+  'El Ateneo Grand Splendid':{ll:[-34.5956,-58.3942],q:'El Ateneo Grand Splendid, Buenos Aires'},
+  'Café Tortoni':{ll:[-34.6087,-58.3787],q:'Café Tortoni, Buenos Aires'},
+  'Plaza de Mayo y Casa Rosada':{ll:[-34.6083,-58.3712],q:'Casa Rosada, Buenos Aires'},
+  'Bosques de Palermo y Rosedal':{ll:[-34.5714,-58.4178],q:'Rosedal de Palermo, Buenos Aires'},
+  'MALBA':{ll:[-34.5770,-58.4035],q:'MALBA, Buenos Aires'},
+  'Puerto Madero':{ll:[-34.6080,-58.3656],q:'Puente de la Mujer, Buenos Aires'},
+  'Colonia del Sacramento':{ll:[-34.4717,-57.8515],q:'Barrio Histórico, Colonia del Sacramento, Uruguay'},
+  'Parrilla de barrio':{q:'parrilla bodegón'},
+  'Heladería artesanal':{q:'heladería artesanal'}
+};
+const PUNTOS={
+  eze:{n:'Aeropuerto de Ezeiza',d:'Llegada · a unos 40 minutos del centro',ll:[-34.8150,-58.5348],q:'Aeropuerto Internacional Ezeiza'},
+  aep:{n:'Aeroparque Jorge Newbery',d:'Vuelta · dentro de la ciudad, junto al río',ll:[-34.5592,-58.4156],q:'Aeroparque Jorge Newbery, Buenos Aires'}
+};
+
+/* v5: Colonia del Sacramento el domingo 22 y sobres reacomodados para pagarlo */
+const TOPES_V4={Alojamiento:760,Comida:740,Transporte:260,Paseos:240,Compras:200,Seguro:180,Otros:47};
+const TOPES_V5={Alojamiento:760,Comida:670,Transporte:230,Paseos:500,Compras:40,Seguro:180,Otros:47};
+const P5={
+  feria:'Feria de San Telmo en Defensa, temprano. Solo domingos',
+  puerto:'Al puerto. Hay migraciones: llegar con una hora',
+  ida:'Barco a Colonia del Sacramento',
+  colonia:'Llegada a Colonia. Tour de medio día por el casco histórico',
+  vuelta:'Barco de vuelta a Buenos Aires',
+  llegada:'Llegada al puerto. Cena por Puerto Madero',
+  colon:'Teatro Colón por fuera y Plaza Lavalle',
+  ateneo:'El Ateneo Grand Splendid y compras en Av. Santa Fe'
+};
+/* v6: El Ateneo pasa al sábado 21, junto a lo demás de Recoleta */
+const P6={
+  ateneo:'El Ateneo Grand Splendid. Hay un café en el escenario',
+  floralis:'Floralis Genérica y Facultad de Derecho',
+  compras:'Compras en Av. Santa Fe'
+};
+/* v7: base en el departamento y la visita guiada al Colón vuelve */
+const TOPES_V7={Alojamiento:460,Comida:670,Transporte:330,Paseos:635,Compras:105,Seguro:180,Otros:47};
+const P7={
+  traslado:'Del aeropuerto al departamento en taxi oficial, unos 45 minutos',
+  maletas:'Dejar maletas en el departamento y desayunar café con medialunas',
+  aeroparque:'Taxi del departamento a Aeroparque, pedido desde la noche anterior',
+  colon:'Visita guiada al Teatro Colón'
+};
+/* v8: itinerario día a día con lugares en el mapa */
+const PLAN_V8={
+  d21:[
+    {h:'05:05',t:'Aterrizan en Ezeiza. Migraciones y equipaje'},
+    {h:'06:30',t:P7.traslado,nota:'Taxi del mostrador oficial dentro del aeropuerto. Nunca con el que ofrece viaje en la puerta.'},
+    {h:'08:00',t:P7.maletas,casa:true},
+    {h:'09:30',t:'El Ateneo Grand Splendid',lugar:'El Ateneo Grand Splendid',ll:[-34.5960,-58.3943],q:'El Ateneo Grand Splendid, Buenos Aires',nota:'Librería dentro de un antiguo teatro. Suban al café del escenario.',costo:'Gratis'},
+    {h:'10:45',t:'Palacio de Aguas Corrientes',lugar:'Palacio de Aguas Corrientes',ll:[-34.6003,-58.3947],q:'Palacio de Aguas Corrientes, Av. Córdoba 1950, Buenos Aires',nota:'Los sábados el Museo del Agua está cerrado: se ve la fachada, que es lo más lindo.',costo:'Gratis'},
+    {h:'11:30',t:'Teatro Colón · visita guiada',lugar:'Teatro Colón',ll:[-34.6011,-58.3832],q:'Teatro Colón, Buenos Aires',nota:'Compren la entrada en la web del teatro unos días antes.',costo:'USD 20 c/u aprox.'},
+    {h:'13:00',t:'Almuerzo en Güerrín',lugar:'Pizzería Güerrín',ll:[-34.6041,-58.3860],q:'Güerrín, Av. Corrientes 1368, Buenos Aires',nota:'La pizzería clásica de Av. Corrientes. Suele haber cola.'},
+    {h:'14:30',t:'Obelisco',lugar:'Obelisco',ll:[-34.6037,-58.3816],q:'Obelisco, Buenos Aires',nota:'La foto clásica en la 9 de Julio. Crucen solo con semáforo: es muy ancha.',costo:'Gratis'},
+    {h:'15:15',t:'Av. de Mayo y Café Tortoni',lugar:'Café Tortoni',ll:[-34.6087,-58.3781],q:'Café Tortoni, Buenos Aires',nota:'Un café rápido o solo verlo por dentro. Suele haber cola.'},
+    {h:'16:00',t:'Casa Rosada · visita guiada',lugar:'Casa Rosada',ll:[-34.6081,-58.3703],q:'Casa Rosada, Balcarce 50, Buenos Aires',nota:'Reserva gratis en visitas.casarosada.gob.ar, abre 15 días antes. Lleven pasaporte y lleguen 15 min antes por Balcarce 50. Al salir: Plaza de Mayo y la Catedral.',costo:'Gratis'},
+    {h:'17:30',t:'Vuelta al departamento a descansar',casa:true,nota:'En taxi o app, unos 25 minutos.'},
+    {h:'20:00',t:'Cena temprano cerca del departamento',nota:'Vienen de una noche en el avión.'}
+  ],
+  d22:[
+    {h:'09:00',t:'Desayuno en Lharmonie',lugar:'Lharmonie',ll:[-34.5766,-58.4124],q:'Lharmonie, Av. del Libertador 3118, Buenos Aires',nota:'Panadería francesa con café de especialidad. Abre 9:00 los domingos. Plan B: La Biela, en Recoleta, desde las 8:00.'},
+    {h:'10:00',t:'Taxi al puerto',nota:'Estar 1 h 30 antes. Confirma si el barco es de Buquebus o Colonia Express: salen de terminales distintas.'},
+    {h:'12:30',t:P5.ida},
+    {h:'13:45',t:'Portón de Campo, entrada al Barrio Histórico',lugar:'Portón de Campo',ll:[-34.4727,-57.8505],q:'Portón de Campo, Colonia del Sacramento, Uruguay',nota:'A unos 10 minutos a pie del puerto. Si el tour trae guía, síganlo: pasa por estos mismos puntos.',costo:'Gratis'},
+    {h:'14:15',t:'Calle de los Suspiros',lugar:'Calle de los Suspiros',ll:[-34.4735,-57.8515],q:'Calle de los Suspiros, Colonia del Sacramento, Uruguay',nota:'La postal más conocida de Colonia: empedrado y casitas de época.',costo:'Gratis'},
+    {h:'14:45',t:'Plaza Mayor 25 de Mayo',lugar:'Plaza Mayor de Colonia',ll:[-34.4722,-57.8514],q:'Plaza Mayor 25 de Mayo, Colonia del Sacramento, Uruguay',costo:'Gratis'},
+    {h:'15:15',t:'Faro de Colonia',lugar:'Faro de Colonia',ll:[-34.4728,-57.8523],q:'Faro de Colonia del Sacramento, Uruguay',nota:'Suban: la vista del río y de los techos es lo mejor del día.',costo:'Entrada chica'},
+    {h:'16:00',t:'Basílica del Santísimo Sacramento',lugar:'Basílica del Santísimo Sacramento',ll:[-34.4711,-57.8507],q:'Basílica del Santísimo Sacramento, Colonia del Sacramento, Uruguay',nota:'Una de las iglesias más antiguas de Uruguay.',costo:'Gratis'},
+    {h:'16:30',t:'Almuerzo tardío en el Barrio Histórico',nota:'Allá usan pesos uruguayos. En la zona turística aceptan tarjeta y dólares.'},
+    {h:'18:00',t:'Rambla y Bastión del Carmen',lugar:'Bastión del Carmen',ll:[-34.4693,-57.8503],q:'Bastión del Carmen, Colonia del Sacramento, Uruguay',nota:'Paseo junto al río antes de volver.',costo:'Gratis'},
+    {h:'19:15',t:'Al puerto de Colonia',nota:'Migraciones de vuelta. El atardecer lo ven desde el barco.'},
+    {h:'20:15',t:P5.vuelta},
+    {h:'21:30',t:'Llegada a Buenos Aires'},
+    {h:'22:00',t:'Puerto Madero de noche y cena',lugar:'Puente de la Mujer',ll:[-34.6080,-58.3651],q:'Puente de la Mujer, Buenos Aires',nota:'Caminata por los diques hasta el Puente de la Mujer iluminado. Zona tranquila de noche.',costo:'Gratis, salvo la cena'}
+  ],
+  d23:[
+    {h:'10:00',t:'Cementerio de la Recoleta',lugar:'Cementerio de la Recoleta',ll:[-34.5877,-58.3936],q:'Cementerio de la Recoleta, Buenos Aires',nota:'Busquen la bóveda de la familia Duarte, donde está Evita.',costo:'USD 12 c/u aprox.'},
+    {h:'11:30',t:'Café en La Biela',lugar:'La Biela',ll:[-34.5879,-58.3908],q:'La Biela, Av. Quintana 600, Buenos Aires',nota:'Café histórico frente al Cementerio.'},
+    {h:'12:30',t:'Floralis Genérica',lugar:'Floralis Genérica',ll:[-34.5817,-58.3940],q:'Floralis Genérica, Buenos Aires',nota:'La flor gigante de acero de Plaza Naciones Unidas.',costo:'Gratis'},
+    {h:'13:30',t:'Almuerzo por Recoleta'},
+    {h:'15:00',t:'Jardín Japonés',lugar:'Jardín Japonés',ll:[-34.5751,-58.4093],q:'Jardín Japonés, Buenos Aires',nota:'Estanques, puentes y carpas koi.',costo:'Con entrada'},
+    {h:'16:30',t:'Rosedal y Bosques de Palermo',lugar:'Rosedal de Palermo',ll:[-34.5710,-58.4172],q:'Rosedal de Palermo, Buenos Aires',nota:'En primavera es la mejor época para las rosas.',costo:'Gratis'},
+    {h:'18:00',t:'Descanso en el departamento',casa:true},
+    {h:'20:30',t:'Cena en Palermo Soho',lugar:'Plaza Serrano',ll:[-34.5888,-58.4302],q:'Plaza Serrano, Palermo, Buenos Aires',nota:'Plaza Serrano y alrededores. Un bife de chorizo alcanza para los dos.'}
+  ],
+  d24:[
+    {h:'10:00',t:'San Telmo: Mercado y calle Defensa',lugar:'Mercado de San Telmo',ll:[-34.6190,-58.3725],q:'Mercado de San Telmo, Buenos Aires',nota:'Entre semana no hay feria, pero el mercado y los anticuarios abren.',costo:'Gratis'},
+    {h:'12:00',t:'Caminito en La Boca',lugar:'Caminito',ll:[-34.6394,-58.3626],q:'Caminito, La Boca, Buenos Aires',nota:'De día y sin salir de la zona turística. Vayan y vuelvan en taxi.',costo:'Gratis'},
+    {h:'14:00',t:'Almuerzo en La Boca o San Telmo'},
+    {h:'15:30',t:'Puerto Madero y Reserva Ecológica',lugar:'Reserva Ecológica Costanera Sur',ll:[-34.6069,-58.3527],q:'Reserva Ecológica Costanera Sur, Buenos Aires',nota:'Caminen por los diques y entren a la reserva junto al río.',costo:'Gratis'},
+    {h:'17:30',t:'Calle Florida y Galerías Pacífico',lugar:'Galerías Pacífico',ll:[-34.5992,-58.3748],q:'Galerías Pacífico, Buenos Aires',nota:'Compras de último momento. Miren los murales de la cúpula.'},
+    {h:'20:00',t:'Cena de despedida'},
+    {h:'22:00',t:'Armar maletas y dormir',casa:true,nota:'El taxi a Aeroparque sale a las 03:15.'}
+  ]
+};
+/* v9: cuánto cuesta cada parada para los dos (precios de 2026, se ajustan en la app) */
+const E_=(que,m,mon,cat)=>({que,m,mon,cat});
+const EST_V9={
+  [P7.traslado]:[E_('Taxi oficial',55000,'ARS','Transporte')],
+  [P7.maletas]:[E_('Café con medialunas',10000,'ARS','Comida')],
+  'El Ateneo Grand Splendid':[E_('Taxi',6000,'ARS','Transporte')],
+  'Teatro Colón · visita guiada':[E_('Visita guiada',60000,'ARS','Paseos')],
+  'Almuerzo en Güerrín':[E_('Almuerzo',30000,'ARS','Comida')],
+  'Av. de Mayo y Café Tortoni':[E_('Café',20000,'ARS','Comida')],
+  'Vuelta al departamento a descansar':[E_('Taxi',10000,'ARS','Transporte')],
+  'Cena temprano cerca del departamento':[E_('Cena',50000,'ARS','Comida')],
+  'Desayuno en Lharmonie':[E_('Desayuno',25000,'ARS','Comida')],
+  'Taxi al puerto':[E_('Taxi',12000,'ARS','Transporte')],
+  [P5.ida]:[E_('Tour a Colonia',188981,'ARS','Paseos')],
+  'Faro de Colonia':[E_('Entrada al faro',4,'USD','Paseos')],
+  'Almuerzo tardío en el Barrio Histórico':[E_('Almuerzo',50,'USD','Comida')],
+  'Puerto Madero de noche y cena':[E_('Cena',120000,'ARS','Comida')],
+  'Cementerio de la Recoleta':[E_('Entradas',48060,'ARS','Paseos'),E_('Taxi',7000,'ARS','Transporte')],
+  'Café en La Biela':[E_('Café',20000,'ARS','Comida')],
+  'Almuerzo por Recoleta':[E_('Almuerzo',50000,'ARS','Comida')],
+  'Jardín Japonés':[E_('Entradas',48000,'ARS','Paseos'),E_('Taxi',6000,'ARS','Transporte')],
+  'Cena en Palermo Soho':[E_('Cena',70000,'ARS','Comida'),E_('Taxi ida y vuelta',16000,'ARS','Transporte')],
+  'San Telmo: Mercado y calle Defensa':[E_('Taxi',14000,'ARS','Transporte'),E_('Algo en el mercado',20000,'ARS','Comida')],
+  'Caminito en La Boca':[E_('Taxi',6000,'ARS','Transporte')],
+  'Almuerzo en La Boca o San Telmo':[E_('Almuerzo',50000,'ARS','Comida')],
+  'Puerto Madero y Reserva Ecológica':[E_('Taxi',7000,'ARS','Transporte')],
+  'Calle Florida y Galerías Pacífico':[E_('Compras',40000,'ARS','Compras')],
+  'Cena de despedida':[E_('Cena',90000,'ARS','Comida')],
+  'Armar maletas y dormir':[E_('Taxi de vuelta',12000,'ARS','Transporte')],
+  [P7.aeroparque]:[E_('Taxi',10000,'ARS','Transporte')]
+};
+/* pone los estimados solo en las paradas del plan que todavía no tienen */
+function ponerEstimados(it){
+  Object.values(it).forEach(ps=>ps.forEach(p=>{ const k=textoBase(p.t); if(!p.est&&EST_V9[k]) p.est=JSON.parse(JSON.stringify(EST_V9[k])); }));
+  return it;
+}
+/* v11: comidas de barrio y traslados en colectivo o subte (precios verificados en septiembre de 2026) */
+const CAMBIOS_V11={
+  [P7.traslado]:{t:'Al departamento en UberX o taxi oficial, unos 45 minutos',
+    nota:'Más barato: UberX desde la zona señalizada al salir de Arribos, unos $39.000 de promedio (varía). Plan B: taxi oficial prepago del mostrador, $60.000 fijo. Nunca con quien ofrece viaje en la puerta.',
+    est:[E_('UberX',45000,'ARS','Transporte')]},
+  [P7.maletas]:{t:'Dejar maletas y desayunar en el departamento',
+    nota:'Compren en un supermercado cerca del departamento: medialunas, leche y café para todo el viaje.',
+    est:[E_('Desayuno y café para el viaje',21000,'ARS','Comida')]},
+  'El Ateneo Grand Splendid':{nota:'Vayan en colectivo con la tarjeta SUBE: se compra en kioscos por $1.500 y con una sola pagan los dos. Suban al café del escenario.',
+    est:[E_('Tarjeta SUBE',1500,'ARS','Transporte'),E_('Colectivo, los dos',3200,'ARS','Transporte')]},
+  'Almuerzo en Güerrín':{nota:'De parado en la barra es lo más barato: porción de muzza $3.000 a $4.000 y fainá $2.000. Plan B: Banchero o Las Cuartetas, en la misma avenida.',
+    est:[E_('Almuerzo de parado',24000,'ARS','Comida')]},
+  'Av. de Mayo y Café Tortoni':{nota:'Dos cafés, unos $10.000; lo que cuesta es la fila. Si es larga: London City (Av. de Mayo 599) o Los 36 Billares (Av. de Mayo 1265).',
+    est:[E_('Dos cafés',11000,'ARS','Comida')]},
+  'Vuelta al departamento a descansar':{nota:'Subte D desde Catedral hasta Plaza Italia y 15 minutos a pie. Si están muy cansados, app.',
+    est:[E_('Subte, los dos',5100,'ARS','Transporte')]},
+  'Cena temprano cerca del departamento':{t:'Cena en Pizzería Kentucky',lugar:'Pizzería Kentucky',ll:[-34.57877,-58.42554],q:'Pizza Kentucky, Av. Santa Fe 4602, Buenos Aires',
+    nota:'Pizzería clásica de Av. Santa Fe, desde 1942. Empanadas y porciones. Vienen de una noche en el avión.',
+    est:[E_('Cena',28000,'ARS','Comida')]},
+  'Desayuno en Lharmonie':{t:'Desayuno en el departamento',casa:true,sinLugar:true,
+    nota:'Con lo que compraron el sábado. Si quieren darse un gusto, Lharmonie (Av. del Libertador 3118) abre a las 9.',
+    est:[E_('Medialunas',7000,'ARS','Comida')]},
+  'Taxi al puerto':{t:'Al puerto en Uber',est:[E_('Uber',10000,'ARS','Transporte')]},
+  'Almuerzo tardío en el Barrio Histórico':{t:'Chivito en Los Farolitos',lugar:'Los Farolitos',ll:[-34.47068,-57.84878],q:'Los Farolitos, Colonia del Sacramento, Uruguay',
+    nota:'Comida rápida uruguaya al borde del Barrio Histórico; un chivito al plato alcanza para los dos. Paguen con tarjeta: los turistas recuperan impuestos en restaurantes.',
+    est:[E_('Almuerzo',30,'USD','Comida')]},
+  'Puerto Madero de noche y cena':{t:'Puerto Madero de noche y pizza al paso',
+    nota:'Del puerto al Puente de la Mujer iluminado son 20 minutos a pie. Después, pizza de parado en Güerrín (los domingos hasta la 1, confírmenlo) o El Cuartito (cierra a las 0).',
+    est:[E_('Cena',20000,'ARS','Comida')]},
+  'Cementerio de la Recoleta':{est:[E_('Entradas',48060,'ARS','Paseos'),E_('Colectivo, los dos',3200,'ARS','Transporte')]},
+  'Café en La Biela':{nota:'Dos cafés en el salón, unos $10.500; la terraza es más cara. Si quieren ahorrar, sáltenlo.',
+    est:[E_('Dos cafés',10500,'ARS','Comida')]},
+  'Almuerzo por Recoleta':{t:'Almuerzo en Rodi Bar',lugar:'Rodi Bar',ll:[-34.59008,-58.39191],q:'Rodi Bar, Vicente López 1900, Buenos Aires',
+    nota:'Bodegón gallego de 1967 con platos combinados a precio fijo, lleno de gente del barrio. (El Sanjuanino cierra los lunes.)',
+    est:[E_('Almuerzo',38000,'ARS','Comida')]},
+  'Jardín Japonés':{nota:'Desde Recoleta se llega caminando unos 30 minutos por los parques.',
+    est:[E_('Entradas',48000,'ARS','Paseos')]},
+  'Cena en Palermo Soho':{t:'Cena en Club Eros',lugar:'Club Eros',ll:[-34.58739,-58.43181],q:'Club Eros, Uriarte 1609, Buenos Aires',
+    nota:'Bodegón dentro de un club de barrio en Palermo Soho; bife con papas para compartir. Si quieren parrilla libre: Alé Alé, unos $40.000 por persona.',
+    est:[E_('Cena',25000,'ARS','Comida'),E_('Colectivo de ida y app de vuelta',10000,'ARS','Transporte')]},
+  'San Telmo: Mercado y calle Defensa':{nota:'Los puestos de comida abren a las 11; a las 10, café en Coffee Town (Bolívar 976). Entre semana no hay feria, pero el mercado y los anticuarios abren.',
+    est:[E_('Subte, los dos',5100,'ARS','Transporte'),E_('Dos cafés',9000,'ARS','Comida')]},
+  'Almuerzo en La Boca o San Telmo':{t:'Almuerzo en El Desnivel',lugar:'El Desnivel',ll:[-34.61787,-58.37174],q:'El Desnivel, Defensa 855, Buenos Aires',
+    nota:'Parrilla popular de San Telmo, famosa por el choripán. Solo efectivo.',
+    est:[E_('Almuerzo',40000,'ARS','Comida'),E_('Taxi desde La Boca',6000,'ARS','Transporte')]},
+  'Puerto Madero y Reserva Ecológica':{nota:'Desde San Telmo son 25 minutos a pie. En la entrada de la reserva están los carritos de choripán ($4.500 a $5.500). Confirmen el horario de la reserva.',
+    est:[E_('Choripán para compartir',6000,'ARS','Comida')]},
+  'Cena de despedida':{t:'Cena de despedida en Parrilla Peña',lugar:'Parrilla Peña',ll:[-34.60117,-58.39150],q:'Parrilla Peña, Rodríguez Peña 682, Buenos Aires',
+    nota:'Parrilla de barrio con más de 40 años; invitan una empanada y no toma reservas. Un bife de chorizo para compartir. Más barato: Los Galgos (Av. Callao 501).',
+    est:[E_('Cena',75000,'ARS','Comida')]},
+  'Armar maletas y dormir':{nota:'Vuelta en subte D desde Callao. El Uber a Aeroparque sale a las 03:15.',
+    est:[E_('Subte de vuelta, los dos',5100,'ARS','Transporte')]},
+  [P7.aeroparque]:{t:'Uber reservado a Aeroparque, unos 20 minutos',nota:'Resérvenlo con Uber Reserve días antes. Plan B: radiotaxi pedido la noche anterior.',
+    est:[E_('Uber',15000,'ARS','Transporte')]}
+};
+/* cambia una parada solo si nadie le tocó la nota ni los montos */
+function aplicarV11(it){
+  const notaPlan=t=>{ const p=Object.values(PLAN_V8).flat().find(x=>x.t===t); return p?p.nota:undefined; };
+  Object.values(it).forEach(ps=>ps.forEach(p=>{
+    const k=textoBase(p.t), c=CAMBIOS_V11[k]; if(!c) return;
+    const estIgual=!p.est||JSON.stringify(p.est)===JSON.stringify(EST_V9[k]||null);
+    const notaIgual=(p.nota||undefined)===notaPlan(k)||(p.nota&&ALIAS_NOTA[huella(p.nota)]===k);
+    if(!estIgual||!notaIgual) return;
+    if(c.sinLugar){ delete p.ll; delete p.q; delete p.lugar; }
+    if(c.casa) p.casa=true;
+    ['t','lugar','ll','q','nota'].forEach(k=>{ if(c[k]!==undefined) p[k]=JSON.parse(JSON.stringify(c[k])); });
+    p.est=JSON.parse(JSON.stringify(c.est));
+  }));
+  return it;
+}
+/* huella de un texto: reconoce textos viejos guardados en el celular sin tener que escribirlos en el código */
+function huella(t){ let h=0x811c9dc5; for(const c of String(t)){ h^=c.codePointAt(0); h=Math.imul(h,16777619)>>>0; } return h.toString(36); }
+const ALIAS_TEXTO={'blj3mo':P7.traslado,'9ff113':P7.aeroparque,'uow45o':CAMBIOS_V11[P7.traslado].t};
+const ALIAS_NOTA={'n55nxv':'Desayuno en Lharmonie','1st1hox':'Jardín Japonés'};
+const textoBase=t=>ALIAS_TEXTO[huella(t)]||t;
+const copiarPlan=()=>Object.fromEntries(Object.entries(PLAN_V8).map(([d,ps])=>[d,ps.map(p=>Object.assign({ok:false},JSON.parse(JSON.stringify(p))))]));
+const TEXTOS_PLAN=new Set(Object.values(PLAN_V8).flat().map(p=>p.t));
+/* todo lo que alguna versión de la app puso sola en el itinerario (lo demás lo agregaron a mano) */
+const TEXTOS_APP=new Set([
+  'Aterrizan en Ezeiza. Migraciones y equipaje','Al centro en bus Tienda León o taxi acordado','Dejar maletas y desayunar café con medialunas',
+  'Cementerio de la Recoleta','Almuerzo por Recoleta','Floralis Genérica y Facultad de Derecho','Cena temprano. Vienen de una noche en el avión',
+  'Feria de San Telmo en Defensa, solo domingos','Almuerzo en el Mercado de San Telmo','Plaza de Mayo, Casa Rosada y Catedral',
+  'Caminito en La Boca, de día y sin alejarse','Puerto Madero al atardecer','Visita guiada al Teatro Colón','Café Tortoni en Av. de Mayo',
+  'Librería El Ateneo Grand Splendid','Av. Corrientes y Obelisco','Parrilla. Un bife de chorizo alcanza para los dos',
+  'Bosques de Palermo y el Rosedal','Almuerzo en Palermo Soho','Compras en Av. Santa Fe','Cena de despedida','Armar maletas y dormir poco',
+  ...Object.values(P5),...Object.values(P6),...Object.values(P7)
+]);
+Object.values(CAMBIOS_V11).forEach(c=>{ if(c.t){ TEXTOS_APP.add(c.t); TEXTOS_PLAN.add(c.t); } });
+const AVISOS_DIA={
+  d21:'Llegan por <b>Ezeiza</b>. Reserven la visita a la Casa Rosada desde el 6 de noviembre y lleven <b>pasaporte</b>.',
+  d22:'Lleven <b>pasaporte</b>, estén en el puerto <b>1 h 30 antes</b> y revisen que el seguro cubra <b>Uruguay</b>.',
+  d25:'Salen de <b>Aeroparque</b>, no de Ezeiza. Está dentro de la ciudad, junto al río.'
+};
+/* v12: recortes chicos para que el plan entre en los sobres (suman S/ 2,427 exactos) */
+const TOPES_V12={Alojamiento:457,Comida:680,Transporte:252,Paseos:765,Compras:88,Seguro:180,Otros:5};
+const CAMBIOS_V12={
+  'Cena de despedida en Parrilla Peña':{base:'Cena de despedida',t:'Cena de despedida en Los Galgos',lugar:'Los Galgos',ll:[-34.60301,-58.39225],q:'Los Galgos, Av. Callao 501, Buenos Aires',
+    nota:'Bar notable de 1930 con cocina porteña a buen precio, en Callao y Lavalle. Si prefieren parrilla: Parrilla Peña (Rodríguez Peña 682), unos $75.000 para dos.',
+    est:[E_('Cena',45000,'ARS','Comida')]},
+  'Café en La Biela':{base:'Café en La Biela',nota:'Opcional: dos cafés en el salón cuestan unos $10.500 y la terraza es más cara. El plan no lo cuenta.',est:[]},
+  'Chivito en Los Farolitos':{base:'Almuerzo tardío en el Barrio Histórico',est:[E_('Almuerzo',25,'USD','Comida')]}
+};
+function aplicarV12(it){
+  Object.values(it).forEach(ps=>ps.forEach(p=>{
+    const c=CAMBIOS_V12[p.t]; if(!c) return;
+    const b=CAMBIOS_V11[c.base];
+    if(JSON.stringify(p.est||[])!==JSON.stringify(b.est)||(p.nota||undefined)!==b.nota) return;
+    ['t','lugar','ll','q','nota'].forEach(k=>{ if(c[k]!==undefined) p[k]=JSON.parse(JSON.stringify(c[k])); });
+    if(c.est.length) p.est=JSON.parse(JSON.stringify(c.est)); else delete p.est;
+  }));
+  return it;
+}
+Object.values(CAMBIOS_V12).forEach(c=>{ if(c.t){ TEXTOS_APP.add(c.t); TEXTOS_PLAN.add(c.t); } });
+/* v12: "Antes de viajar" con lo que falta hacer y desde cuándo se puede */
+const PREVIO_V12=[
+  {t:'Seguro médico de viaje',s:'Obligatorio por decreto. Mínimo USD 20.000, del 20 al 25 de noviembre, y que cubra también Uruguay.'},
+  {t:'Pasaporte o DNI vigente',s:'Como peruano entras con DNI por Mercosur, pero el pasaporte nunca falla. Para la Casa Rosada piden pasaporte.'},
+  {t:'Alojamiento reservado',s:'Confirma con el anfitrión la llegada temprano (08:00) y la salida a las 03:15 del miércoles.'},
+  {t:'Uso internacional activado',s:'En la app del banco, débito y crédito. Pregunta también qué comisión cobran por compras en el exterior.'},
+  {t:'Reservar la visita a la Casa Rosada',s:'Gratis en visitas.casarosada.gob.ar, para el sábado 21 a las 16:00. Los turnos abren 15 días antes.',desde:'2026-11-06'},
+  {t:'Comprar la visita guiada al Teatro Colón',s:'En teatrocolon.org.ar, para el sábado 21 a las 11:30.'},
+  {t:'Confirmar la terminal del barco a Colonia',s:'Buquebus y Colonia Express salen de puertos distintos. Con eso se ajusta la hora del Uber del domingo.'},
+  {t:'Internet en el celular',s:'eSIM o chip argentino: sin datos no funcionan Uber, los mapas ni las cotizaciones.'},
+  {t:'Dólares en efectivo',s:'Billetes de 100 en buen estado. Allá cambien de a poco y guarden pesos para El Desnivel (solo efectivo), colectivos y propinas.'},
+  {t:'Documentos en la app',s:'Pasaporte, seguro, reserva, pasajes y voucher del tour, guardados en Documentos para verlos sin señal.'},
+  {t:'Datos del seguro en Emergencias',s:'Aseguradora, teléfono 24 h y póliza, en el botón del escudo de arriba.'},
+  {t:'Uber reservado para el 25',s:'Con Uber Reserve, para salir a las 03:15 hacia Aeroparque. Plan B: radiotaxi pedido la noche anterior.'},
+  {t:'Confirmar horarios de los restaurantes',s:'Una semana antes: Rodi Bar, Club Eros, Güerrín el domingo y la Reserva Ecológica el martes.',desde:'2026-11-14'}
+];
+/* textos de la lista anterior que se actualizan si nadie los cambió */
+const PREVIO_VIEJO={
+  'Seguro médico de viaje':{s:'Obligatorio por decreto. Mínimo USD 20.000, con las fechas del 20 al 25 de noviembre.'},
+  'Pasaporte o DNI vigente':{s:'Como peruano entras con DNI por Mercosur, pero el pasaporte nunca falla.'},
+  'Alojamiento reservado':{s:'Cuatro noches. Hotel inscripto antes que Airbnb: no pagas el 21% de IVA.'},
+  'Uso internacional activado':{s:'En la app del banco, débito y crédito, dos o tres días antes.'},
+  'Dólares en efectivo':{s:'Billetes de 100 en buen estado, comprados acá en Lima.'},
+  'Copias en el celular':{s:'Pasaje, seguro, reserva y documento. Descargados, no en la nube.',nuevo:'Documentos en la app'},
+  'Taxi de Aeroparque para el 25':{s:'Salen 05:30, hay que estar 03:45. Déjalo acordado la noche anterior.',nuevo:'Uber reservado para el 25'}
+};
+function actualizarPrevio(lista){
+  const nueva=PREVIO_V12.map(x=>Object.assign({ok:false},x));
+  const propios=[];
+  lista.forEach(p=>{
+    const v=PREVIO_VIEJO[p.t], destino=v?(v.nuevo||p.t):p.t, n=nueva.find(x=>x.t===destino);
+    if(v&&p.s===v.s&&n){ if(p.ok) n.ok=true; }
+    else if(n&&p.s===n.s){ if(p.ok) n.ok=true; }
+    else propios.push(p);
+  });
+  return nueva.concat(propios);
+}
+const LUGAR_COLONIA={n:'Colonia del Sacramento',d:'Uruguay · casco histórico, domingo 22 en barco',p:'Tour pagado',ok:false};
+
+function inicial(){const e={
+  ver:VER,
+  presupuesto:5000,
+  tasas:{usdPen:3.37,arsUsd:1545},
+  manual:false,
+  vivo:null,
+  fuente:'blue',
+  topes:Object.assign({},TOPES_V12),
+  gastos:[{id:1,cuando:1,dia:'previo',desc:'Pasajes Lima–Buenos Aires (los dos)',cat:'Pasajes',monto:2572.55,mon:'PEN',pen:2572.55,medio:'tarjeta'}],
+  billetera:{inicial:{USD:0,PEN:0,ARS:0},cambios:[]},
+  emergencia:{seguro:'',seguroTel:'',poliza:'',contacto:'',contactoTel:''},
+  clima:null,
+  alojamiento:{opciones:[],elegida:null,gastoId:null},
+  previo:PREVIO_V12.map(x=>Object.assign({ok:false},x)),
+  itinerario:{
+    ...copiarPlan(),
+    d25:[{h:'03:15',t:P7.aeroparque,ok:false},
+         {h:'03:45',t:'Check-in y migraciones',ok:false},
+         {h:'05:30',t:'Despegue a Lima',ok:false},
+         {h:'08:15',t:'Llegada a Lima',ok:false}]
+  },
+  lugares:[
+    {n:'Cementerio de la Recoleta',d:'Recoleta · mausoleos y la tumba de Evita',p:'USD 12',ok:false},
+    {n:'Feria de San Telmo',d:'San Telmo · solo domingos, desde Plaza Dorrego',p:'Gratis',ok:false},
+    {n:'Caminito',d:'La Boca · de día y sin salir de la zona turística',p:'Gratis',ok:false},
+    {n:'Teatro Colón',d:'Centro · la visita guiada vale cada peso',p:'USD 20',ok:false},
+    {n:'El Ateneo Grand Splendid',d:'Recoleta · librería dentro de un teatro, el sábado 21',p:'Gratis',ok:false},
+    {n:'Café Tortoni',d:'Av. de Mayo · el café más viejo, suele haber cola',p:'USD 10 c/u',ok:false},
+    {n:'Plaza de Mayo y Casa Rosada',d:'Centro · corazón político del país',p:'Gratis',ok:false},
+    {n:'Bosques de Palermo y Rosedal',d:'Palermo · parque enorme, perfecto en primavera',p:'Gratis',ok:false},
+    {n:'MALBA',d:'Palermo · arte latinoamericano, Frida y Botero',p:'USD 10',ok:false},
+    {n:'Puerto Madero',d:'Puente de la Mujer y la reserva ecológica al lado',p:'Gratis',ok:false},
+    Object.assign({},LUGAR_COLONIA),
+    {n:'Parrilla de barrio',d:'Un bodegón lejos del centro turístico',p:'USD 15 c/u',ok:false},
+    {n:'Heladería artesanal',d:'Dulce de leche granizado. No es negociable',p:'USD 4',ok:false}
+  ]
+};
+  ponerEstimados(e.itinerario);
+  aplicarV11(e.itinerario);
+  aplicarV12(e.itinerario);
+  return e;
+}
+
+const FRASES=[
+  ['¿Me cobrás?','Así se pide la cuenta. Nadie dice "la cuenta, por favor".'],
+  ['Facturas','Nada que ver con tu trabajo: son los panes dulces del desayuno.'],
+  ['Bondi','El colectivo.'],
+  ['Luca','Mil pesos. "Dos lucas" son dos mil.'],
+  ['Un cortado / una lágrima','Café con un poco de leche / leche con un poco de café.'],
+  ['Medialunas de manteca o de grasa','Las de manteca son dulces, las de grasa saladas. Pide de manteca.'],
+  ['Choripán y bondiola','Los dos sánguches que hay que probar sí o sí.'],
+  ['Birra','Cerveza.'],
+  ['Dale','Sirve para sí, ok, listo y vamos. Lo vas a usar todo el día.'],
+  ['Palta','Igual que acá. En Argentina también le dicen palta, no aguacate.']
+];
+const PRECIOS=[['Viaje en subte (SUBE sin registrar)',1.65],['Empanada',1.8],['Café con medialunas',6],
+  ['Almuerzo en bodegón',12],['Parrilla completa',18],['Helado grande',4],
+  ['Bus Tienda León de Ezeiza al centro',10.8],['Uber de Palermo a Aeroparque',8]];
+
+let E=null, desde='ARS', modoGastos='sobres', editando=null, alTmp=null, aqui=null, lugarSel=null, mapaListo=false;
+
+/* ================= fechas ================= */
+const fechaBA=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));
+/* a qué día del viaje pertenece un momento: antes del 20 es "previo", después del 25 se queda en el 25 */
+function diaDe(ms){
+  const f=fechaBA(ms);
+  if(f<'2026-11-20') return 'previo';
+  if(f>'2026-11-25') return '2026-11-25';
+  return f;
+}
+const nomDia=f=>(DIAS_G.find(d=>d.f===f)||{n:f}).n;
+
+/* ================= migración ================= */
+/* Convierte cualquier forma guardada a la actual sin perder nada de lo anotado. */
+function migrar(e){
+  const base=inicial();
+  if(!e||typeof e!=='object') return base;
+  E=e;
+  for(const k of ['presupuesto','tasas','topes','previo','itinerario','lugares']) if(e[k]==null) e[k]=base[k];
+  if(!Array.isArray(e.gastos)) e.gastos=[];
+  if(!FUENTES[e.fuente]) e.fuente='blue';
+  if(e.vivo===undefined) e.vivo=null;
+  for(const d of DIAS) if(!Array.isArray(e.itinerario[d.id])) e.itinerario[d.id]=[];
+
+  if(!e.ver||e.ver<4){
+    /* v3 → v4. En v3 guardar tasas a mano borraba E.vivo: si hay tasas propias y no hay vivo, respetarlas. */
+    const propias=e.tasas.usdPen!==base.tasas.usdPen||e.tasas.arsUsd!==base.tasas.arsUsd;
+    e.manual=!e.vivo&&propias;
+    e.alojamiento={opciones:[],elegida:null,gastoId:null};
+    e.gastos.forEach(g=>{
+      if(typeof g.cuando!=='number') g.cuando=(typeof g.id==='number'&&g.id>1e12)?g.id:1;
+      if(!g.dia) g.dia=g.cuando>1?diaDe(g.cuando):'previo';
+    });
+    e.ver=4;
+  }
+  if(e.ver<5){
+    /* v4 → v5. Solo se toca lo que sigue exactamente como en el plan original:
+       lo que se agregó, editó o marcó a mano se queda como está. */
+    const mismos=CATS.every(c=>e.topes[c]===TOPES_V4[c]);
+    if(mismos) Object.assign(e.topes,TOPES_V5);
+
+    const it=e.itinerario;
+    const tomar=(dia,h,t)=>{ const i=it[dia].findIndex(p=>p.h===h&&p.t===t); return i<0?null:it[dia].splice(i,1)[0]; };
+    const cambiar=(dia,h,t,nh,nt)=>{ const p=it[dia].find(x=>x.h===h&&x.t===t); if(p){ p.h=nh; p.t=nt; } return !!p; };
+
+    if(!it.d22.some(p=>/Colonia/.test(p.t))){
+      cambiar('d22','10:00','Feria de San Telmo en Defensa, solo domingos','09:30',P5.feria);
+      tomar('d22','13:00','Almuerzo en el Mercado de San Telmo');
+      tomar('d22','20:00','Puerto Madero al atardecer');
+      const plaza=tomar('d22','15:00','Plaza de Mayo, Casa Rosada y Catedral');
+      const caminito=tomar('d22','17:00','Caminito en La Boca, de día y sin alejarse');
+      it.d22.push({h:'11:00',t:P5.puerto,ok:false},{h:'12:30',t:P5.ida,ok:false},{h:'13:45',t:P5.colonia,ok:false},
+                  {h:'20:15',t:P5.vuelta,ok:false},{h:'21:30',t:P5.llegada,ok:false});
+
+      cambiar('d23','10:00','Visita guiada al Teatro Colón','10:00',P5.colon);
+      cambiar('d23','17:00','Av. Corrientes y Obelisco','18:30','Av. Corrientes y Obelisco');
+      if(plaza){ plaza.h='13:30'; it.d23.push(plaza); }
+      if(caminito){ caminito.h='16:00'; it.d23.push(caminito); }
+      if(tomar('d23','15:00','Librería El Ateneo Grand Splendid')){
+        if(!cambiar('d24','15:30','Compras en Av. Santa Fe','15:30',P5.ateneo))
+          it.d24.push({h:'15:30',t:'Librería El Ateneo Grand Splendid',ok:false});
+      }
+      for(const d of ['d22','d23','d24']) it[d].sort((a,b)=>a.h.localeCompare(b.h));
+    }
+    if(!e.lugares.some(l=>l.n===LUGAR_COLONIA.n)){
+      const i=e.lugares.findIndex(l=>l.n==='Puerto Madero');
+      e.lugares.splice(i<0?e.lugares.length:i+1,0,Object.assign({},LUGAR_COLONIA));
+    }
+    e.ver=5;
+  }
+  if(e.ver<6){
+    /* v5 → v6. El Ateneo al sábado; en martes y lunes se quita solo si sigue como lo dejó la app */
+    const it=e.itinerario;
+    const tomar=(dia,h,t)=>{ const i=it[dia].findIndex(p=>p.h===h&&p.t===t); return i<0?null:it[dia].splice(i,1)[0]; };
+    const cambiar=(dia,h,t,nh,nt)=>{ const p=it[dia].find(x=>x.h===h&&x.t===t); if(p){ p.h=nh; p.t=nt; } return !!p; };
+    if(!it.d21.some(p=>/Ateneo/.test(p.t))){
+      it.d21.push({h:'14:30',t:P6.ateneo,ok:false});
+      cambiar('d21','16:00',P6.floralis,'16:30',P6.floralis);
+      cambiar('d24','15:30',P5.ateneo,'15:30',P6.compras);
+      tomar('d24','15:30','Librería El Ateneo Grand Splendid');
+      tomar('d23','15:00','Librería El Ateneo Grand Splendid');
+      it.d21.sort((a,b)=>a.h.localeCompare(b.h));
+    }
+    const at=e.lugares.find(l=>l.n==='El Ateneo Grand Splendid');
+    if(at&&at.d==='Recoleta · librería dentro de un teatro') at.d='Recoleta · librería dentro de un teatro, el sábado 21';
+    e.ver=6;
+  }
+  if(e.ver<7){
+    /* v6 → v7. Topes y pasos solo cambian si siguen como los dejó la app; una reserva ya elegida no se reemplaza */
+    if(CATS.every(c=>e.topes[c]===TOPES_V5[c])) Object.assign(e.topes,TOPES_V7);
+    const it=e.itinerario;
+    const cambiar=(dia,h,t,nt)=>{ const p=it[dia].find(x=>x.h===h&&x.t===t); if(p) p.t=nt; };
+    cambiar('d21','06:30','Al centro en bus Tienda León o taxi acordado',P7.traslado);
+    cambiar('d21','08:00','Dejar maletas y desayunar café con medialunas',P7.maletas);
+    cambiar('d23','10:00',P5.colon,P7.colon);
+    cambiar('d25','03:15','Taxi a Aeroparque, pedido desde la noche anterior',P7.aeroparque);
+    e.ver=7;
+  }
+  if(e.ver<8){
+    /* v7 → v8. Sábado a martes pasan al plan nuevo. Se conserva lo agregado a mano y lo ya marcado como hecho */
+    const plan=copiarPlan();
+    for(const d of Object.keys(plan)){
+      const viejos=e.itinerario[d]||[];
+      viejos.forEach(p=>{ const n=plan[d].find(x=>x.t===textoBase(p.t)); if(n&&p.ok) n.ok=true; });
+      const propios=viejos.filter(p=>(p.ok||!TEXTOS_APP.has(textoBase(p.t)))&&!plan[d].some(x=>x.t===textoBase(p.t)));
+      e.itinerario[d]=plan[d].concat(propios).sort((a,b)=>a.h.localeCompare(b.h));
+    }
+    e.ver=8;
+  }
+  if(e.ver<9){
+    /* v8 → v9. Solo agrega montos estimados a las paradas del plan; no toca nada más */
+    ponerEstimados(e.itinerario);
+    e.ver=9;
+  }
+  if(e.ver<11){
+    /* v10 → v11. Comidas más baratas y traslados en transporte público, solo en paradas que sigan como las dejó la app */
+    ponerEstimados(e.itinerario);
+    aplicarV11(e.itinerario);
+  }
+  if(e.ver<10){
+    /* v9 → v10. Solo agrega billetera, datos de emergencia y clima; no toca lo anotado */
+    e.ver=10;
+  }
+  if(e.ver<11) e.ver=11;
+  if(e.ver<12){
+    /* v11 → v12. Recortes para cuadrar, topes nuevos si siguen como los dejó la app, y la lista "Antes de viajar" al día */
+    aplicarV12(e.itinerario);
+    if(CATS.every(c=>e.topes[c]===TOPES_V7[c])) Object.assign(e.topes,TOPES_V12);
+    e.previo=actualizarPrevio(e.previo||[]);
+    e.ver=12;
+  }
+  if(!e.billetera) e.billetera={inicial:{USD:0,PEN:0,ARS:0},cambios:[]};
+  if(!e.emergencia) e.emergencia={seguro:'',seguroTel:'',poliza:'',contacto:'',contactoTel:''};
+  if(e.clima===undefined) e.clima=null;
+  if(typeof e.manual!=='boolean') e.manual=false;
+  if(!e.alojamiento) e.alojamiento={opciones:[],elegida:null,gastoId:null};
+  e.gastos.forEach(g=>{
+    /* un gasto sin equivalente en soles se congela una sola vez, ahora */
+    if(typeof g.pen!=='number'||!isFinite(g.pen)) g.pen=aSoles(+g.monto||0,g.mon);
+    if(typeof g.cuando!=='number') g.cuando=typeof g.id==='number'?g.id:1;
+    if(!DIAS_G.some(d=>d.f===g.dia)) g.dia='previo';
+  });
+  return e;
+}
+
+/* ================= tasas ================= */
+/* "tarjeta" es la de una tarjeta extranjera: Visa aplica un valor levemente inferior al MEP.
+   El "dólar tarjeta" que publica DolarApi es el de residentes argentinos (con 30% de percepción) y no aplica. */
+const claveArs=f=>f==='tarjeta'?'mep':f;
+function tasaArs(f){
+  if(E.manual) return E.tasas.arsUsd;
+  const a=E.vivo&&E.vivo.ars; f=f||E.fuente;
+  return (a&&(a[claveArs(f)]||(f==='tarjeta'&&a.oficial)||a.blue))||E.tasas.arsUsd;
+}
+function tasaPen(){
+  if(E.manual) return E.tasas.usdPen;
+  return (E.vivo&&E.vivo.usdPen)||E.tasas.usdPen;
+}
+function fuenteReal(f){
+  if(E.manual) return 'manual';
+  const a=E.vivo&&E.vivo.ars; f=f||E.fuente;
+  if(a&&(a[claveArs(f)]||(f==='tarjeta'&&a.oficial))) return f;
+  if(a&&a.blue) return 'blue';
+  return 'manual';
+}
+const tasaAhora=f=>({ars:tasaArs(f),pen:tasaPen(),fuente:fuenteReal(f)});
+function convertir(m,mon,t){
+  if(mon==='PEN') return m;
+  if(mon==='USD') return m*t.pen;
+  return m/t.ars*t.pen;
+}
+const aSoles=(m,mon)=>convertir(m,mon,tasaAhora());
+
+function conTiempo(url,ms=8000){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms);
+  return fetch(url,{signal:c.signal,cache:'no-store'}).then(r=>{ clearTimeout(t); if(!r.ok) throw new Error(r.status); return r.json(); });
+}
+async function traerTasas(){
+  const res={ars:null,usdPen:null};
+  try{
+    let d=null;
+    for(const u of ['https://ar.dolarapi.com/v1/dolares','https://dolarapi.com/v1/dolares']){
+      try{ d=await conTiempo(u); break; }catch(e){}
+    }
+    if(Array.isArray(d)){
+      const g=c=>{ const x=d.find(i=>i.casa===c); const v=x&&(x.venta||x.compra); return v>0?v:null; };
+      res.ars={ blue:g('blue'), oficial:g('oficial'), tarjeta:g('tarjeta')||g('turista'), mep:g('bolsa') };
+      if(!res.ars.blue&&!res.ars.oficial) res.ars=null;
+    }
+  }catch(e){}
+  try{
+    const d=await conTiempo('https://open.er-api.com/v6/latest/USD');
+    if(d&&d.rates&&d.rates.PEN>0) res.usdPen=d.rates.PEN;
+  }catch(e){}
+  if(!res.ars&&!res.usdPen) return null;
+  return {
+    ars: res.ars||(E.vivo&&E.vivo.ars)||null,
+    usdPen: res.usdPen||(E.vivo&&E.vivo.usdPen)||null,
+    parcial: !res.ars||!res.usdPen,
+    cuando: Date.now()
+  };
+}
+function haceCuanto(ms){
+  const s=Math.floor((Date.now()-ms)/1000);
+  if(s<90) return 'recién';
+  if(s<3600) return 'hace '+Math.floor(s/60)+' min';
+  if(s<86400) return 'hace '+Math.floor(s/3600)+' h';
+  const d=Math.floor(s/86400); return 'hace '+d+(d===1?' día':' días');
+}
+let trayendo=false;
+async function actualizar(manual){
+  if(trayendo) return; trayendo=true;
+  const bs=[document.querySelector('#cinta .recarga')];
+  bs.forEach(b=>b.classList.add('girando'));
+  const t=await traerTasas();
+  bs.forEach(b=>b.classList.remove('girando'));
+  trayendo=false;
+  if(t){ E.vivo=t; await guardar(); }
+  else if(manual){ avisar('No hay conexión con las cotizaciones. Sigue con las últimas.'); }
+  pintarTodo();
+}
+const viejas=min=>!E.vivo||(Date.now()-E.vivo.cuando)>min*60000;
+
+/* ================= utilidades ================= */
+const $=id=>document.getElementById(id);
+const nf=(n,d,loc)=>n.toLocaleString(loc||'es-PE',{minimumFractionDigits:d,maximumFractionDigits:d});
+const s0=n=>(Math.round(n)<0?'-':'')+'S/\u00A0'+nf(Math.abs(Math.round(n)),0);
+const s2=n=>(n<-0.004?'-':'')+'S/\u00A0'+nf(Math.abs(n),2);
+const pesos=n=>'$\u00A0'+nf(Math.round(n),0,'es-AR');
+const dolares=n=>'US$\u00A0'+nf(n,2);
+const fmon=(m,mon)=>mon==='PEN'?s2(m):mon==='USD'?dolares(m):pesos(m);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pesoDe=g=>g.pen;
+const numero=v=>{ const n=parseFloat(String(v).replace(',','.')); return isFinite(n)?n:NaN; };
+const CHECK='<svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg>';
+function diasRestantes(){
+  const hoy=new Date(), ini=new Date('2026-11-21T05:00:00-03:00'), fin=new Date('2026-11-25T06:00:00-03:00');
+  if(hoy<ini) return 5;
+  return Math.max(Math.ceil((fin-hoy)/86400000),1);
+}
+const guardar=()=>almacen.guardar(E);
+const porFecha=(a,b)=>b.cuando-a.cuando;
+
+let toastT=null;
+function avisar(txt,deshacer){
+  const t=$('toast'), b=t.querySelector('button');
+  t.querySelector('span').textContent=txt;
+  b.hidden=!deshacer;
+  b.onclick=()=>{ clearTimeout(toastT); t.classList.remove('on'); if(deshacer) deshacer(); };
+  t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),deshacer?6000:3200);
+}
+
+function filaGasto(g,dec){
+  return `<button class="item fila-btn" data-gasto="${g.id}">
+    <span class="pic">${ICONO[g.cat]||'•'}</span>
+    <span class="cuerpo"><span class="t">${esc(g.desc)}</span><span class="s">${esc(g.cat)} · ${fmon(g.monto,g.mon)}</span></span>
+    <span class="v">${dec?s2(pesoDe(g)):s0(pesoDe(g))}</span></button>`;
+}
+
+/* ================= pintar ================= */
+function pintarCinta(){
+  const c=$('cinta'), punto=c.querySelector('.punto'), txt=c.querySelector('.txt');
+  if(E.manual){
+    punto.className='punto mano';
+    txt.innerHTML=`<b>Usando tus tasas</b><span>${pesos(E.tasas.arsUsd)} por dólar · S/ ${nf(E.tasas.usdPen,3)} el dólar</span>`;
+  } else if(E.vivo&&E.vivo.ars){
+    const f=fuenteReal();
+    const viejo=(Date.now()-E.vivo.cuando)>6*3600*1000||E.vivo.parcial;
+    punto.className='punto'+(viejo?' viejo':'');
+    txt.innerHTML=`<b>Dólar ${f==='manual'?'':FUENTES[f].et+' '}${pesos(tasaArs())}</b>
+      <span>Sol a S/ ${nf(tasaPen(),3)} · ${haceCuanto(E.vivo.cuando)}</span>`;
+  } else {
+    punto.className='punto off';
+    txt.innerHTML=`<b>Sin cotización en vivo</b><span>Usando ${pesos(E.tasas.arsUsd)} por dólar · S/ ${nf(E.tasas.usdPen,3)} el dólar</span>`;
+  }
+}
+
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
+function cuandoPrevio(p){
+  if(!p.desde||p.ok) return '';
+  const [,m,d]=p.desde.split('-').map(Number);
+  return fechaBA(Date.now())<p.desde?`<span class="cuando">Desde el ${d} de ${MESES[m-1]}</span>`:'<span class="cuando ya">Ya se puede hacer</span>';
+}
+function pintarInicio(){
+  const gastado=E.gastos.reduce((s,g)=>s+pesoDe(g),0);
+  const saldo=E.presupuesto-gastado;
+  const pct=E.presupuesto>0?Math.min(100,Math.max(0,gastado/E.presupuesto*100)):100;
+  $('saldo').textContent=s0(saldo); $('saldo').classList.toggle('neg',saldo<0);
+  const b=$('barra'); b.style.width=pct+'%'; b.className=pct>92?'mal':pct>75?'alerta':'';
+  $('pie-izq').textContent=`${s0(gastado)} de ${s0(E.presupuesto)}`;
+  /* lo que falta pagar de alojamiento y seguro no es plata para gastar en el día */
+  const porCat=totalesPorCat();
+  const reservado=['Alojamiento','Seguro'].reduce((t,c)=>t+Math.max(0,(E.topes[c]||0)-(porCat[c]||0)),0);
+  const libre=saldo-reservado;
+  $('pie-der').textContent=saldo<0?'Sobregirado':libre<=0?'Sin margen diario':`${s0(libre/diasRestantes())} por día`;
+
+  pintarCinta();
+
+  $('pct-listo').textContent=`${E.previo.filter(p=>p.ok).length} de ${E.previo.length}`;
+  $('lista-previo').innerHTML=E.previo.map((p,i)=>`
+    <div class="chk ${p.ok?'listo':''}">
+      <button class="caja ${p.ok?'on':''}" data-previo="${i}" aria-label="Marcar">${CHECK}</button>
+      <div class="cuerpo"><div class="t">${esc(p.t)}</div><div class="s">${esc(p.s)}</div>${cuandoPrevio(p)}</div></div>`).join('');
+
+  let prox=null;
+  for(const d of DIAS){ const p=(E.itinerario[d.id]||[]).find(x=>!x.ok); if(p){prox={d,p};break;} }
+  $('proximo').innerHTML=prox
+    ? `<div class="item"><span class="pic">${esc(String(prox.p.h).slice(0,2))}</span><div class="cuerpo">
+       <div class="t">${esc(prox.p.t)}</div><div class="s">${esc(prox.d.n)} · ${esc(prox.p.h)}</div></div></div>`
+    : '<div class="vacio">Ya hicieron todo lo del itinerario.</div>';
+
+  $('ultimos').innerHTML=E.gastos.slice().sort(porFecha).slice(0,3).map(g=>filaGasto(g,false)).join('')
+    || '<div class="vacio">Sin movimientos todavía.</div>';
+}
+
+function totalesPorCat(){ const r={}; E.gastos.forEach(g=>r[g.cat]=(r[g.cat]||0)+pesoDe(g)); return r; }
+function totalesPorDia(){ const r={}; E.gastos.forEach(g=>r[g.dia]=(r[g.dia]||0)+pesoDe(g)); return r; }
+const ivaAhorrado=()=>E.gastos.reduce((s,g)=>s+(g.ivaPen||0),0);
+
+function pintarGastos(){
+  document.querySelectorAll('#modo-gastos button').forEach(b=>b.classList.toggle('on',b.dataset.modo===modoGastos));
+  $('g-por-sobre').hidden=modoGastos!=='sobres';
+  $('g-por-dia').hidden=modoGastos!=='dias';
+
+  const porCat=totalesPorCat(), iva=ivaAhorrado();
+  $('sobres').innerHTML=CATS.map(c=>{
+    const tope=E.topes[c]||0, usado=porCat[c]||0, p=tope?Math.min(100,usado/tope*100):(usado?100:0);
+    const cls=usado>tope?'mal':p>80?'alerta':'';
+    const extra=c==='Alojamiento'&&iva>0?`<div class="extra">Te ahorraste ${s0(iva)} de IVA</div>`:'';
+    return `<div class="sobre"><div class="fila"><b>${c}</b><span>${s0(usado)} de ${s0(tope)}</span></div>
+      <div class="mini"><i class="${cls}" style="width:${p}%"></i></div>${extra}</div>`;
+  }).join('');
+
+  pintarAloj();
+
+  const orden=E.gastos.slice().sort(porFecha);
+  $('lista-gastos').innerHTML=orden.length?orden.map(g=>filaGasto(g,true)).join('')
+    :'<div class="vacio">Sin movimientos todavía.</div>';
+
+  /* por día */
+  const porDia=totalesPorDia();
+  const delViaje=DIAS_G.filter(d=>d.f!=='previo');
+  const max=Math.max(1,...delViaje.map(d=>porDia[d.f]||0));
+  const totalViaje=delViaje.reduce((s,d)=>s+(porDia[d.f]||0),0);
+  $('prom-dia').textContent=totalViaje?`${s0(totalViaje/delViaje.length)} en promedio`:'';
+  $('resumen-dias').innerHTML=DIAS_G.map(d=>{
+    const v=porDia[d.f]||0, n=E.gastos.filter(g=>g.dia===d.f).length;
+    const barra=d.f==='previo'?'':`<div class="mini"><i style="width:${v/max*100}%"></i></div>`;
+    return `<div class="sobre"><div class="fila"><b>${d.n}</b><span>${s0(v)} · ${n} ${n===1?'gasto':'gastos'}</span></div>${barra}</div>`;
+  }).join('');
+  $('dias-gastos').innerHTML=DIAS_G.map(d=>{
+    const gs=E.gastos.filter(g=>g.dia===d.f).sort(porFecha);
+    if(!gs.length) return '';
+    return `<div class="bloque"><div class="tit">${d.n}<span class="cont">${s2(porDia[d.f]||0)}</span></div>
+      <div>${gs.map(g=>filaGasto(g,true)).join('')}</div></div>`;
+  }).join('');
+}
+
+/* ================= alojamiento ================= */
+function costoAloj(o){
+  const t=tasaAhora('tarjeta');
+  const bruto=convertir((o.precio||0)*(o.noches||0),o.mon,t);
+  const neto=o.iva?bruto/(1+IVA):bruto;
+  return {bruto,neto,ahorro:bruto-neto,t};
+}
+function pintarAloj(){
+  const A=E.alojamiento, ops=A.opciones;
+  const el=ops.find(o=>o.id===A.elegida);
+  let h='';
+  if(el){
+    const c=costoAloj(el), g=E.gastos.find(x=>x.id===A.gastoId);
+    h+=`<div class="reserva"><div class="rt">RESERVA ELEGIDA</div>
+      <div class="fila"><span class="n">${esc(el.nombre)}</span><span class="v">${s0(g?pesoDe(g):c.neto)}</span></div>
+      <div class="s">${[el.barrio,`${el.noches} ${el.noches===1?'noche':'noches'}`,el.iva?`sin IVA, ahorras ${s0(g?g.ivaPen||0:c.ahorro)}`:''].filter(Boolean).map(esc).join(' · ')}</div>
+      ${g?'<div class="s">Ya está en tus gastos. Si cambió el precio, edita el gasto.</div>'
+         :'<div class="s">Todavía sin pagar. Regístralo cuando te cobren.</div><button class="btn" data-aloj-registrar>Registrar en gastos</button>'}</div>`;
+  }
+  if(ops.length){
+    const netos=ops.map(o=>costoAloj(o).neto), min=Math.min(...netos);
+    h+='<div>'+ops.map((o,i)=>{
+      const partes=[];
+      if(o.id===A.elegida) partes.push('Elegida');
+      else if(ops.length>1&&netos[i]===min) partes.push('La más barata');
+      if(o.barrio) partes.push(o.barrio);
+      partes.push(`${fmon(o.precio,o.mon)} por noche`);
+      if(o.desayuno) partes.push('desayuno');
+      if(o.cancela) partes.push('cancela gratis');
+      if(o.iva) partes.push('sin IVA');
+      return `<button class="item fila-btn" data-aloj="${o.id}"><span class="pic">⌂</span>
+        <span class="cuerpo"><span class="t">${esc(o.nombre)}</span><span class="s envuelve">${partes.map(esc).join(' · ')}</span></span>
+        <span class="v">${s0(netos[i])}</span></button>`;
+    }).join('')+'</div>';
+    h+='<p class="nota">Totales en soles por todas las noches, con la cotización tarjeta. Confirma con el hotel que te factura sin IVA al pagar con tarjeta emitida en Perú.</p>';
+  } else if(!el){
+    h+='<div class="vacio">Agrega los hoteles que estás mirando para compararlos.</div>';
+  }
+  $('aloj').innerHTML=h;
+}
+const FLAGS=[
+  ['desayuno','Desayuno incluido',''],
+  ['cancela','Cancelación gratis',''],
+  ['iva','Sin IVA para turistas','Hotel inscripto y pago con tarjeta emitida en Perú. Airbnb no califica.']
+];
+function pintarFlags(){
+  $('al-flags').innerHTML=FLAGS.map(([k,t,s])=>`<div class="chk">
+    <button class="caja ${alTmp[k]?'on':''}" data-alflag="${k}" aria-label="${t}">${CHECK}</button>
+    <div class="cuerpo"><div class="t">${t}</div>${s?`<div class="s">${s}</div>`:''}</div></div>`).join('');
+}
+function leerAloj(){
+  alTmp.nombre=$('al-nombre').value.trim();
+  alTmp.barrio=$('al-barrio').value.trim();
+  alTmp.noches=Math.max(1,Math.round(numero($('al-noches').value)||0));
+  alTmp.precio=numero($('al-precio').value);
+  alTmp.mon=$('al-mon').value;
+  alTmp.dir=$('al-dir').value.trim();
+  alTmp.link=$('al-link').value.trim();
+}
+function calcAloj(){
+  leerAloj();
+  if(!(alTmp.precio>0)){ $('al-calc').innerHTML='&nbsp;'; return; }
+  const c=costoAloj(alTmp);
+  $('al-calc').textContent=alTmp.iva
+    ? `${alTmp.noches} noches: ${s0(c.bruto)} con IVA, pagas ${s0(c.neto)}. Ahorras ${s0(c.ahorro)}.`
+    : `${alTmp.noches} noches: ${s0(c.bruto)}.`;
+}
+function abrirAloj(o){
+  alTmp=o?Object.assign({},o):{id:null,nombre:'',barrio:'',noches:4,precio:NaN,mon:'USD',dir:'',link:'',desayuno:false,cancela:false,iva:false};
+  $('al-titulo').textContent=o?'Editar opción':'Nueva opción de alojamiento';
+  $('al-nombre').value=alTmp.nombre; $('al-barrio').value=alTmp.barrio; $('al-noches').value=alTmp.noches;
+  $('al-precio').value=isFinite(alTmp.precio)?alTmp.precio:''; $('al-mon').value=alTmp.mon;
+  $('al-dir').value=alTmp.dir||''; $('al-link').value=alTmp.link||'';
+  $('al-elegir').hidden=!o||E.alojamiento.elegida===o.id;
+  $('al-quitar').hidden=!o;
+  pintarFlags(); calcAloj(); abrir('aloj');
+}
+function guardarAlojTmp(){
+  leerAloj();
+  if(!alTmp.nombre){ $('al-nombre').focus(); return null; }
+  if(!(alTmp.precio>0)){ $('al-precio').focus(); return null; }
+  const ops=E.alojamiento.opciones;
+  if(alTmp.id){ const o=ops.find(x=>x.id===alTmp.id);
+    if(o.dir!==alTmp.dir){ alTmp.ll=null; alTmp.aprox=false; }
+    Object.assign(o,alTmp); return o; }
+  const o=Object.assign({},alTmp,{id:Date.now()}); ops.push(o); return o;
+}
+
+/* ================= días: itinerario dinámico ================= */
+let diaSel=null, pasoSel=null, zonaSel=null, pasoEdit=null;
+const NOM_ZONA={ba:'Buenos Aires',uy:'Colonia'};
+const zonaDe=ll=>ll[1]>-58.1?'uy':'ba';
+const casaLL=()=>{ const c=casaElegida(); return c&&c.ll?c.ll:null; };
+const llDe=p=>p.casa?casaLL():(p.ll||null);
+const aMin=h=>/^\d\d:\d\d$/.test(h)?(+h.slice(0,2))*60+(+h.slice(3)):null;
+/* el domingo 22 están fuera de Buenos Aires entre el barco de ida y el de vuelta */
+const chocaColonia=(dia,p)=>dia==='d22'&&p.h>'12:30'&&p.h<'21:30'&&!TEXTOS_PLAN.has(p.t)&&!(p.ll&&zonaDe(p.ll)==='uy')
+  &&E.itinerario.d22.some(x=>x.t===P5.ida);
+
+function diaInicial(){
+  const hoy=fechaBA(Date.now()), d=DIAS.find(x=>x.f===hoy);
+  return d?d.id:hoy>'2026-11-25'?'d25':'d21';
+}
+/* las calles no van en línea recta: se estira la distancia un 30% */
+function tramo(a,b){
+  const km=distKm(a,b)*1.3;
+  if(km>2.5) return {pie:0,txt:`En taxi · unos ${Math.round(km/25*60+4)} min`};
+  return {pie:km,txt:`${Math.max(1,Math.round(km/4.5*60))} min a pie · ${fkm(km)}`};
+}
+function destinoDe(p){
+  if(p.casa){ const c=casaElegida(); return c?(c.ll?c.ll.join(','):c.dir+', Buenos Aires'):''; }
+  return p.q||(p.ll?p.ll.join(','):p.t);
+}
+function urlDesde(desde,p){
+  let u='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destinoDe(p));
+  const ll=llDe(p);
+  if(desde&&ll) u+='&origin='+desde.join(',')+(tramo(desde,ll).pie?'&travelmode=walking':'');
+  return u;
+}
+const CATS_PLAN=['Comida','Transporte','Paseos','Compras','Otros'];
+const estSoles=x=>x.mon==='PEN'?x.m:aSoles(x.m,x.mon);
+function estDePasos(ps){
+  const r={total:0}; ps.forEach(p=>(p.est||[]).forEach(x=>{ const v=estSoles(x); r[x.cat]=(r[x.cat]||0)+v; r.total+=v; })); return r;
+}
+function filasDelDia(ps){
+  let n=0, prev=null;
+  return ps.map((p,i)=>{
+    const ll=llDe(p), f={p,i,ll,num:p.ll&&!p.casa?++n:null,tramo:null,desde:null};
+    if(ll){
+      if(prev&&zonaDe(prev)===zonaDe(ll)){ f.desde=prev; f.tramo=tramo(prev,ll); }
+      prev=ll;
+    }
+    return f;
+  });
+}
+
+function pintarDias(){
+  if(!diaSel) diaSel=diaInicial();
+  const hoy=fechaBA(Date.now());
+  $('dias-tabs').innerHTML=DIAS.map(d=>{
+    const [dn,dd]=d.n.split(' ');
+    return `<button class="${d.id===diaSel?'on':''}" data-dsel="${d.id}" aria-label="${d.n}">${d.f===hoy?'<i class="hoy-punto"></i>':''}<span class="dn">${dn.slice(0,3)}</span><span class="dd">${dd}</span></button>`;
+  }).join('');
+
+  const d=DIAS.find(x=>x.id===diaSel), ps=E.itinerario[d.id]||[], esHoy=d.f===hoy;
+  const aviso=AVISOS_DIA[d.id]; $('dia-aviso').hidden=!aviso; if(aviso) $('dia-aviso').innerHTML=aviso;
+  $('dia-titulo').textContent=d.n; $('dia-tema').textContent=d.s;
+  pintarClima(d);
+  const hechos=ps.filter(p=>p.ok).length;
+  $('dia-progreso').textContent=(esHoy?'Hoy · ':'')+`${hechos} de ${ps.length} hechas`;
+
+  const filas=filasDelDia(ps);
+  const enMapa=filas.filter(f=>f.num).length, pie=filas.reduce((s,f)=>s+(f.tramo?f.tramo.pie:0),0);
+  const est=estDePasos(ps), real=E.gastos.filter(g=>g.dia===d.f).reduce((t,g)=>t+pesoDe(g),0);
+  $('dia-datos').innerHTML=`<div><b>${enMapa}</b><span>${enMapa===1?'lugar':'lugares'}</span></div>
+    <div><b>${nf(pie,1)} km</b><span>a pie</span></div><div><b>${s0(est.total)}</b><span>estimado</span></div>`
+;
+  const presu=$('dia-presu'); presu.hidden=!(est.total||real);
+  presu.innerHTML=CATS_PLAN.filter(c=>est[c]).map(c=>`<div class="fila"><span>${c}</span><span>≈ ${s0(est[c])}</span></div>`).join('')
+    +`<div class="fila total"><span>Estimado del día</span><span>≈ ${s0(est.total)}</span></div>`
+    +`<div class="fila"><span class="gris">Ya anotado ese día</span><span class="gris">${s0(real)}</span></div>`
+    +(est.total?'<p class="nota" style="margin:6px 0 0">Toca un monto de una parada para anotarlo como gasto.</p>':'');
+
+  let iAhora=-1, iSig=-1;
+  if(esHoy){
+    const m=partesHora(TZ,new Date()).min;
+    ps.forEach((p,i)=>{ const pm=aMin(p.h); if(pm==null) return; if(pm<=m) iAhora=i; else if(iSig<0) iSig=i; });
+    if(iAhora>=0&&(ps[iAhora].ok||m-aMin(ps[iAhora].h)>120)) iAhora=-1;
+  }
+
+  $('dia-linea').innerHTML=filas.length?filas.map(f=>{
+    const p=f.p;
+    const badge=p.casa?'<span class="num casa">⌂</span>':f.num?`<span class="num">${f.num}</span>`:'<span class="num punto"></span>';
+    const estado=f.i===iAhora?'<span class="estado ahora">Ahora</span>':f.i===iSig?'<span class="estado sig">Siguiente</span>':'';
+    const llegar=f.ll?`<a href="${urlDesde(f.desde,p)}" target="_blank" rel="noopener">Cómo llegar</a>`:'';
+    return (f.tramo?`<div class="tramo"><div class="riel"><i></i></div><span>${f.tramo.txt}</span></div>`:'')
+      +`<div class="parada ${p.ok?'hecha':''} ${pasoSel===f.i?'sel':''}" id="parada-${f.i}">
+        <div class="riel">${badge}<i></i></div>
+        <div class="p-cuerpo">
+          <div class="p-cab"><span class="hora">${esc(p.h)}</span>${estado}</div>
+          <button class="p-nom" data-psel="${f.i}">${esc(p.t)}</button>
+          ${p.nota?`<div class="p-nota">${esc(p.nota)}</div>`:''}
+          ${chocaColonia(d.id,p)?'<div class="p-nota choca">Cruza con el tour a Colonia</div>':''}
+          ${(p.est||[]).length?`<div class="p-est">${p.est.map((x,k)=>`<button data-anotar="${f.i}:${k}" aria-label="Anotar ${esc(x.que)} como gasto">${esc(x.que)} <b>≈ ${s0(estSoles(x))}</b></button>`).join('')}</div>`:''}
+          <div class="p-pie">${p.costo?`<span class="costo">${esc(p.costo)}</span>`:''}${llegar}<button data-peditar="${f.i}">Editar</button></div>
+        </div>
+        <button class="caja ${p.ok?'on':''}" data-dia="${d.id}" data-i="${f.i}" aria-label="Marcar hecha">${CHECK}</button>
+      </div>`;
+  }).join(''):'<div class="vacio">Nada planeado todavía.</div>';
+
+  pintarRuta(filas);
+  pintarEstimadoViaje();
+}
+function pintarEstimadoViaje(){
+  const est=estDePasos(Object.values(E.itinerario).flat());
+  const topes=CATS_PLAN.reduce((t,c)=>t+(E.topes[c]||0),0);
+  $('viaje-est-total').textContent=`≈ ${s0(est.total)} de ${s0(topes)}`;
+  $('viaje-est').innerHTML=CATS_PLAN.filter(c=>est[c]||E.topes[c]).map(c=>{
+    const v=est[c]||0, tope=E.topes[c]||0, p=tope?Math.min(100,v/tope*100):(v?100:0), pasa=v-tope;
+    return `<div class="sobre"><div class="fila"><b>${c}</b><span class="${pasa>0.5?'mal':''}">≈ ${s0(v)} de ${s0(tope)}</span></div>
+      <div class="mini"><i class="${pasa>0.5?'mal':p>85?'alerta':''}" style="width:${p}%"></i></div></div>`;
+  }).join('')+(est.total>topes+0.5?`<p class="nota" style="color:var(--rojo)">El plan se pasa por ≈ ${s0(est.total-topes)}. Cambia paradas o mueve topes en Ajustes.</p>`:'');
+}
+function anotarEstimado(i,k){
+  const d=DIAS.find(x=>x.id===diaSel), p=E.itinerario[d.id][i], x=p.est[k];
+  abrirGasto(null);
+  $('g-desc').value=p.est.length>1||!p.t.toLowerCase().includes(x.que.toLowerCase())?`${x.que} · ${p.t}`:p.t;
+  $('g-monto').value=x.m; $('g-mon').value=x.mon==='PEN'?'PEN':x.mon; $('g-cat').value=x.cat; $('g-dia').value=d.f;
+  equivalencia();
+}
+
+/* mapa propio: teselas de CARTO sobre OpenStreetMap, con los números y la ruta encima */
+const TESELA='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png';
+function proyectar(ll,z){
+  const t=256*Math.pow(2,z), sen=Math.sin(ll[0]*Math.PI/180);
+  return [(ll[1]+180)/360*t,(0.5-Math.log((1+sen)/(1-sen))/(4*Math.PI))*t];
+}
+function pintarRuta(filas){
+  const marco=$('ruta-marco'), pts=filas.filter(f=>f.num);
+  $('ruta').hidden=!pts.length;
+  if(!pts.length) return;
+  const zonas=[...new Set(pts.map(f=>zonaDe(f.ll)))];
+  const sel=pasoSel==='casa'?null:filas.find(f=>f.i===pasoSel&&f.ll);
+  if(sel) zonaSel=zonaDe(sel.ll);
+  if(!zonas.includes(zonaSel)) zonaSel=zonas.map(z=>[z,pts.filter(f=>zonaDe(f.ll)===z).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const enZona=pts.filter(f=>zonaDe(f.ll)===zonaSel), extra=zonas.length>1?36:0;
+  const W=marco.clientWidth||343, H=marco.clientHeight||240, pad=30;
+
+  /* zoom continuo: la ruta llena el mapa y las teselas del zoom entero se escalan */
+  const base=enZona.map(f=>proyectar(f.ll,0)), bx=base.map(a=>a[0]), by=base.map(a=>a[1]);
+  const dx=Math.max(...bx)-Math.min(...bx), dy=Math.max(...by)-Math.min(...by);
+  const zx=dx?Math.log2((W-pad*2)/dx):16, zy=dy?Math.log2((H-pad*2-extra)/dy):16;
+  const zf=Math.max(3,Math.min(16,zx,zy)), zi=Math.floor(zf), esc2=Math.pow(2,zf-zi), ts=256*esc2, n=Math.pow(2,zi);
+  const xy=enZona.map(f=>proyectar(f.ll,zf)), xs=xy.map(a=>a[0]), ys=xy.map(a=>a[1]);
+  const ox=(Math.max(...xs)+Math.min(...xs))/2-W/2, oy=(Math.max(...ys)+Math.min(...ys))/2-H/2-extra/2;
+  const aPantalla=ll=>{ const p=proyectar(ll,zf); return [p[0]-ox,p[1]-oy]; };
+
+  let h='';
+  for(let tx=Math.floor(ox/ts);tx<=Math.floor((ox+W)/ts);tx++)
+    for(let ty=Math.floor(oy/ts);ty<=Math.floor((oy+H)/ts);ty++){
+      if(ty<0||ty>=n) continue;
+      const x=((tx%n)+n)%n, url=TESELA.replace('{s}','abcd'[(x+ty)%4]).replace('{z}',zi).replace('{x}',x).replace('{y}',ty);
+      h+=`<img class="tile" alt="" src="${url}" style="left:${(tx*ts-ox).toFixed(1)}px;top:${(ty*ts-oy).toFixed(1)}px;width:${(ts+.5).toFixed(1)}px;height:${(ts+.5).toFixed(1)}px" onerror="this.remove()">`;
+    }
+  const linea=enZona.map(f=>aPantalla(f.ll).map(v=>v.toFixed(1)).join(',')).join(' ');
+  h+=`<svg aria-hidden="true"><polyline points="${linea}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>
+    <polyline points="${linea}" fill="none" stroke="#0E7C7B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6"/></svg>`;
+  const casa=casaLL();
+  if(casa&&zonaSel==='ba'){
+    const [x,y]=aPantalla(casa);
+    if(x>0&&x<W&&y>0&&y<H) h+=`<button class="pin casa" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px" data-pcasa aria-label="El departamento">⌂</button>`;
+  }
+  h+=enZona.map(f=>{ const [x,y]=aPantalla(f.ll);
+    return `<button class="pin ${f.p.ok?'hecha':''} ${f.i===pasoSel?'sel':''}" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px" data-psel="${f.i}" data-mapa aria-label="${esc(f.p.t)}">${f.num}</button>`; }).join('');
+  if(zonas.length>1) h+=`<div class="segm ruta-zona">${zonas.map(zn=>`<button class="${zn===zonaSel?'on':''}" data-zona="${zn}">${NOM_ZONA[zn]}</button>`).join('')}</div>`;
+  h+='<span class="ruta-attr">© OpenStreetMap · © CARTO</span>';
+  marco.innerHTML=h;
+
+  const ir=$('ruta-ir');
+  if(pasoSel==='casa'&&casaElegida()){
+    const c=casaElegida();
+    $('ruta-nom').textContent=c.nombre; $('ruta-sub').textContent=c.dir+(c.aprox?' · ubicación aproximada':'');
+    ir.textContent='Cómo llegar'; ir.href=urlDesde(null,{casa:true});
+  } else if(sel){
+    $('ruta-nom').textContent=`${sel.num}. ${sel.p.t}`;
+    $('ruta-sub').textContent=[sel.p.h,sel.p.costo].filter(Boolean).join(' · ');
+    ir.textContent='Cómo llegar'; ir.href=urlDesde(sel.desde,sel.p);
+  } else {
+    $('ruta-nom').textContent='Ruta por '+NOM_ZONA[zonaSel];
+    $('ruta-sub').textContent=`${enZona.length} ${enZona.length===1?'lugar':'lugares'} · toca un número`;
+    const ll=enZona.map(f=>f.ll.join(','));
+    const aPie=enZona.every((f,k)=>!k||tramo(enZona[k-1].ll,f.ll).pie);
+    ir.textContent='Ruta en Maps';
+    ir.href='https://www.google.com/maps/dir/?api=1&origin='+ll[0]+'&destination='+ll[ll.length-1]
+      +(ll.length>2?'&waypoints='+encodeURIComponent(ll.slice(1,-1).slice(0,8).join('|')):'')+(aPie?'&travelmode=walking':'');
+  }
+}
+
+/* ---------- agregar y editar paradas ---------- */
+const CATALOGO=(()=>{
+  const m=new Map();
+  Object.values(PLAN_V8).flat().forEach(p=>{ if(p.lugar&&p.ll&&!m.has(p.lugar)) m.set(p.lugar,{ll:p.ll,q:p.q}); });
+  Object.entries(GEO).forEach(([k,g])=>{ if(g.ll&&!m.has(k)) m.set(k,{ll:g.ll,q:g.q}); });
+  Object.values(PUNTOS).forEach(p=>{ if(!m.has(p.n)) m.set(p.n,{ll:p.ll,q:p.q}); });
+  Object.values(CAMBIOS_V11).concat(Object.values(CAMBIOS_V12)).forEach(c=>{ if(c.lugar&&c.ll&&!m.has(c.lugar)) m.set(c.lugar,{ll:c.ll,q:c.q}); });
+  return [...m.entries()].map(([k,g])=>Object.assign({n:k},g)).sort((a,b)=>a.n.localeCompare(b.n,'es'));
+})();
+function abrirPaso(dia,i){
+  const p=i==null?null:E.itinerario[dia][i];
+  pasoEdit=p?{dia,i}:null;
+  $('i-titulo').textContent=p?'Editar parada':'Agregar parada';
+  $('i-dia').value=dia;
+  $('i-hora').value=p&&aMin(p.h)!=null?p.h:'';
+  $('i-txt').value=p?p.t:''; $('i-nota').value=p&&p.nota||''; $('i-costo').value=p&&p.costo||''; $('i-dir').value='';
+  const enCat=!!(p&&p.lugar&&CATALOGO.some(c=>c.n===p.lugar));
+  const op=['<option value="">Sin lugar en el mapa</option>'];
+  if(casaElegida()) op.push('<option value="__casa">El departamento</option>');
+  if(p&&p.ll&&!enCat) op.push(`<option value="__actual">${esc(p.lugar||'Ubicación guardada')}</option>`);
+  op.push(...CATALOGO.map(c=>`<option value="${esc(c.n)}">${esc(c.n)}</option>`));
+  $('i-lugar').innerHTML=op.join('');
+  $('i-lugar').value=!p?'':p.casa?'__casa':enCat?p.lugar:p.ll?'__actual':'';
+  $('i-add').textContent=p?'Guardar cambios':'Agregar'; $('i-add').disabled=false;
+  $('i-quitar').hidden=!p; $('i-estado').innerHTML='&nbsp;';
+  $('i-est').innerHTML=''; (p&&p.est||[]).forEach(x=>$('i-est').appendChild(filaEst(x)));
+  abrir('paso');
+}
+function filaEst(x){
+  x=x||{que:'',m:'',mon:'ARS',cat:'Comida'};
+  const div=document.createElement('div'); div.className='est-fila';
+  div.innerHTML=`<div class="duo"><input class="est-que" placeholder="Qué: taxi, entradas…" value="${esc(x.que)}" autocomplete="off" aria-label="Qué">
+      <select class="est-cat" aria-label="Sobre">${CATS_PLAN.map(c=>`<option${c===x.cat?' selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="trio"><input class="est-m" type="number" inputmode="decimal" min="0" placeholder="Monto" value="${x.m===''?'':x.m}" aria-label="Monto">
+      <select class="est-mon" aria-label="Moneda">${['ARS','USD','PEN'].map(m=>`<option value="${m}"${m===x.mon?' selected':''}>${m==='PEN'?'S/':m}</option>`).join('')}</select>
+      <button type="button" class="quitar-est" aria-label="Quitar monto">×</button></div>`;
+  div.querySelector('.quitar-est').onclick=()=>div.remove();
+  return div;
+}
+function leerEst(){
+  return [...document.querySelectorAll('#i-est .est-fila')].map(r=>({que:r.querySelector('.est-que').value.trim()||'Gasto',
+    m:numero(r.querySelector('.est-m').value),mon:r.querySelector('.est-mon').value,cat:r.querySelector('.est-cat').value})).filter(x=>x.m>0);
+}
+async function geocodificar(dir,dia){
+  const conCiudad=/buenos aires|colonia|uruguay|argentina/i.test(dir);
+  const intentos=conCiudad?[dir]:[dir+', Buenos Aires, Argentina'].concat(dia==='d22'?[dir+', Colonia del Sacramento, Uruguay']:[]);
+  for(const q of intentos){
+    try{
+      const r=await conTiempo('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar,uy&q='+encodeURIComponent(q));
+      if(r&&r[0]) return {ll:[+(+r[0].lat).toFixed(5),+(+r[0].lon).toFixed(5)],q};
+    }catch(e){}
+  }
+  return null;
+}
+
+/* ================= guía y mapa ================= */
+const geoDe=l=>GEO[l.n]||{};
+function distKm(a,b){
+  const R=6371, r=x=>x*Math.PI/180;
+  const dLat=r(b[0]-a[0]), dLon=r(b[1]-a[1]);
+  const h=Math.sin(dLat/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+const fkm=k=>k<1?`${Math.round(k*1000/50)*50} m`:`${nf(k,1)} km`;
+function urlMapa(ll){
+  let b;
+  if(ll){ b=[ll[1]-0.009,ll[0]-0.006,ll[1]+0.009,ll[0]+0.006]; }
+  else { b=[-58.445,-34.645,-58.345,-34.565]; }
+  return 'https://www.openstreetmap.org/export/embed.html?bbox='+b.map(x=>x.toFixed(5)).join('%2C')
+    +'&layer=mapnik'+(ll?`&marker=${ll[0]}%2C${ll[1]}`:'');
+}
+const urlLlegar=q=>'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(q);
+const urlBuscar=q=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q+', Buenos Aires');
+
+function casaElegida(){ const A=E.alojamiento, el=A.opciones.find(o=>o.id===A.elegida); return el&&el.dir?el:null; }
+
+function mostrarEnMapa(p){
+  /* p = {n, d, ll?, q} */
+  lugarSel=p?p.n:null;
+  const ir=$('mapa-ir');
+  if(p){
+    $('mapa-nom').textContent=p.n; $('mapa-sub').textContent=p.d||'';
+    if(p.ll){ ir.textContent='Cómo llegar'; ir.href=urlLlegar(p.q||p.n); }
+    else { ir.textContent='Buscar cerca'; ir.href=aqui
+      ? `https://www.google.com/maps/search/${encodeURIComponent(p.q)}/@${aqui[0]},${aqui[1]},15z`
+      : urlBuscar(p.q); }
+    ir.hidden=false;
+  } else {
+    const A=E.alojamiento, el=A.opciones.find(o=>o.id===A.elegida);
+    if(el&&el.dir){
+      $('mapa-nom').textContent=el.nombre; $('mapa-sub').textContent=el.dir+(el.aprox?' · ubicación aproximada':'');
+      ir.textContent='Cómo llegar'; ir.href=urlLlegar(el.dir+', Buenos Aires'); ir.hidden=false;
+    } else {
+      $('mapa-nom').textContent='Buenos Aires'; $('mapa-sub').textContent='Toca un lugar de la lista para verlo aquí';
+      ir.hidden=true;
+    }
+  }
+  $('mapa-off').hidden=navigator.onLine!==false;
+  $('mapa-frame').src=urlMapa(p?p.ll:casaElegida()&&casaElegida().ll);
+  mapaListo=true;
+}
+
+function pintarLugares(){
+  $('cont-lug').textContent=`${E.lugares.filter(l=>l.ok).length} de ${E.lugares.length} visitados`+(aqui?' · ordenados por cercanía':'');
+  let lista=E.lugares.map((l,i)=>({l,i,g:geoDe(l)}));
+  if(aqui){
+    lista.forEach(x=>x.km=x.g.ll?distKm(aqui,x.g.ll):Infinity);
+    lista.sort((a,b)=>a.km-b.km);
+  }
+  const casa=casaElegida();
+  const filaCasa=casa?`<div class="lug casa ${lugarSel===null&&mapaListo?'sel':''}"><span class="casa-ic" aria-hidden="true">⌂</span>
+      <button class="ver" data-casa><span class="n">${esc(casa.nombre)}</span><span class="d">Donde se quedan${casa.aprox?' · ubicación aproximada':' · '+esc(casa.dir)}</span></button></div>`:'';
+  $('lista-lugares').innerHTML=filaCasa+lista.map(({l,i,km})=>`
+    <div class="lug ${l.ok?'on':''} ${lugarSel===l.n?'sel':''}">
+      <button class="caja ${l.ok?'on':''}" data-lug="${i}" aria-label="Marcar visitado">${CHECK}</button>
+      <button class="ver" data-ver="${i}"><span class="n">${esc(l.n)}</span><span class="d">${esc(l.d)}${isFinite(km)?' · '+fkm(km):''}</span></button>
+      <div class="p">${esc(l.p)}</div></div>`).join('');
+  $('frases').innerHTML=FRASES.map(([f,q])=>`
+    <div class="item"><div class="cuerpo"><div class="t envuelve">${esc(f)}</div>
+    <div class="s">${esc(q)}</div></div></div>`).join('');
+}
+
+/* ================= cambio ================= */
+function pintarCambio(){
+  const nom={ARS:'Pesos arg.',USD:'Dólares',PEN:'Soles'};
+  $('segm').innerHTML=['ARS','USD','PEN'].map(m=>
+    `<button class="${m===desde?'on':''}" data-mon="${m}">${nom[m]}</button>`).join('');
+  $('c-lbl').textContent='Cuánto en '+nom[desde].toLowerCase();
+
+  const v=numero($('c-monto').value)||0;
+  const up=tasaPen(), au=tasaArs();
+  let pen,usd,ars;
+  if(desde==='ARS'){ars=v;usd=v/au;pen=usd*up;}
+  else if(desde==='USD'){usd=v;pen=v*up;ars=v*au;}
+  else{pen=v;usd=v/up;ars=usd*au;}
+  const filas=[['Soles',s2(pen),desde!=='PEN'],['Dólares',dolares(usd),desde!=='USD'],
+    ['Pesos argentinos',pesos(ars),desde!=='ARS']].filter(r=>r[2]);
+  $('c-salida').innerHTML=filas.map((r,i)=>
+    `<div class="salida"><span class="et">${r[0]}</span><span class="vl ${i===0?'destacado':''}">${r[1]}</span></div>`).join('');
+
+  const t=$('tabla-tasas');
+  if(E.vivo&&E.vivo.ars){
+    const et={blue:'Dólar blue',oficial:'Dólar oficial',mep:'Dólar MEP · el de tu tarjeta',tarjeta:'Dólar tarjeta · solo argentinos'};
+    const upVivo=E.vivo.usdPen||up;
+    t.innerHTML=Object.keys(et).filter(k=>E.vivo.ars[k]).map(k=>`
+      <div class="item"><div class="cuerpo"><div class="t">${et[k]}</div>
+      <div class="s">${k==='tarjeta'?'Incluye 30% de percepción. No aplica a tu tarjeta':`${s2(upVivo/E.vivo.ars[k]*1000)} por cada ${pesos(1000)}`}</div></div>
+      <div class="v">${pesos(E.vivo.ars[k])}</div></div>`).join('')
+      +`<div class="item"><div class="cuerpo"><div class="t">Dólar en Perú</div>
+         <div class="s">Para pasar soles a dólares acá</div></div><div class="v">S/ ${nf(upVivo,3)}</div></div>`;
+    $('c-origen').textContent=`Cotizaciones de DolarApi y open.er-api, traídas ${haceCuanto(E.vivo.cuando)}. Se actualizan solas cada 10 minutos con internet.`;
+  } else {
+    t.innerHTML='<div class="vacio">Sin conexión con las fuentes todavía.</div>';
+    $('c-origen').textContent='Las tasas en vivo necesitan internet. Mientras tanto se usan las guardadas.';
+  }
+
+  $('segm-fuente').innerHTML=Object.keys(FUENTES).map(k=>
+    `<button class="${k===E.fuente?'on':''}" data-fuente="${k}">${FUENTES[k].et}</button>`).join('');
+  $('segm-fuente').classList.toggle('apagado',E.manual);
+  $('explica-fuente').textContent=E.manual
+    ?'Ahora mandan tus tasas. Apaga "Usar mis tasas" para que vuelva a mandar esta cotización.'
+    :FUENTES[E.fuente].ex;
+
+  const sw=$('r-manual'); sw.classList.toggle('on',E.manual); sw.setAttribute('aria-checked',E.manual);
+  if(document.activeElement!==$('r-usdpen')) $('r-usdpen').value=E.tasas.usdPen;
+  if(document.activeElement!==$('r-arsusd')) $('r-arsusd').value=E.tasas.arsUsd;
+  $('precios').innerHTML=PRECIOS.map(([n,u])=>`
+    <div class="item"><div class="cuerpo"><div class="t">${n}</div>
+    <div class="s">${dolares(u)} · ${pesos(u*au)}</div></div>
+    <div class="v gris">${s2(u*up)}</div></div>`).join('');
+}
+
+function pintarTodo(){ pintarInicio(); pintarGastos(); pintarDias(); pintarLugares(); pintarCambio(); pintarBilletera(); }
+
+/* ================= hojas ================= */
+const velo=$('velo');
+const abrir=id=>{ document.querySelectorAll('.hoja.on').forEach(h=>h.classList.remove('on')); $('hoja-'+id).classList.add('on'); velo.classList.add('on'); };
+const cerrar=()=>{ document.querySelectorAll('.hoja').forEach(h=>h.classList.remove('on')); velo.classList.remove('on'); };
+velo.onclick=cerrar;
+
+/* ================= navegación ================= */
+function irA(v){
+  document.querySelector('.app').dataset.v=v;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
+  document.querySelectorAll('.vista').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  window.scrollTo(0,0);
+  if(v==='lugares'&&!mapaListo) mostrarEnMapa(null);
+  if(v==='dias') pintarDias();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>irA(b.dataset.v));
+
+/* ================= gasto: anotar y editar ================= */
+function abrirGasto(g){
+  editando=g||null;
+  const cats=CATS.concat(g&&!CATS.includes(g.cat)?[g.cat]:[]);
+  $('g-cat').innerHTML=cats.map(c=>`<option>${esc(c)}</option>`).join('');
+  $('g-titulo').textContent=g?'Editar gasto':'Anotar un gasto';
+  $('g-desc').value=g?g.desc:'';
+  $('g-monto').value=g?g.monto:'';
+  $('g-mon').value=g?g.mon:($('g-mon').dataset.ultima||'ARS');
+  $('g-cat').value=g?g.cat:'Comida';
+  $('g-dia').value=g?g.dia:diaDe(Date.now());
+  $('g-add').textContent=g?'Guardar cambios':'Anotar';
+  $('g-borrar').hidden=!g;
+  medioTocado=!!g; medioSel=g?(g.medio||'tarjeta'):($('g-mon').value==='PEN'?'tarjeta':'efectivo'); pintarMedio();
+  equivalencia(); abrir('gasto');
+}
+let medioSel='efectivo', medioTocado=false;
+function pintarMedio(){ document.querySelectorAll('#g-medio button').forEach(b=>b.classList.toggle('on',b.dataset.medio===medioSel)); }
+function tasaDelGasto(){ return (editando&&editando.tasa)?editando.tasa:tasaAhora(); }
+function equivalencia(){
+  const m=numero($('g-monto').value), mon=$('g-mon').value;
+  if(!(m>0)){ $('g-eq').innerHTML='&nbsp;'; return; }
+  if(mon==='PEN'){ $('g-eq').textContent=`Se descuentan ${s2(m)} de tu presupuesto.`; return; }
+  const t=tasaDelGasto(), pen=convertir(m,mon,t);
+  $('g-eq').textContent=(editando&&editando.tasa)
+    ? `Son ${s2(pen)}, con la tasa del día que lo anotaste (${pesos(t.ars)} y S/ ${nf(t.pen,3)} por dólar).`
+    : `Son ${s2(pen)} de tu presupuesto, con la cotización ${NOM_FUENTE[t.fuente]} de ahora.`;
+}
+$('g-monto').oninput=equivalencia;
+$('g-mon').onchange=()=>{ if(!medioTocado){ medioSel=$('g-mon').value==='PEN'?'tarjeta':'efectivo'; pintarMedio(); } equivalencia(); };
+$('g-medio').onclick=e=>{ const b=e.target.closest('[data-medio]'); if(!b) return; medioSel=b.dataset.medio; medioTocado=true; pintarMedio(); };
+
+$('g-add').onclick=async()=>{
+  const desc=$('g-desc').value.trim(), monto=numero($('g-monto').value);
+  if(!desc){ $('g-desc').focus(); return; }
+  if(!(monto>0)){ $('g-monto').focus(); return; }
+  const mon=$('g-mon').value, cat=$('g-cat').value, dia=$('g-dia').value;
+  $('g-mon').dataset.ultima=mon;
+  if(editando){
+    const g=editando;
+    /* nunca se usa la tasa de hoy para un gasto viejo: se reusa la que quedó guardada */
+    let pen=g.pen;
+    if(monto!==g.monto||mon!==g.mon){
+      const t=g.tasa||tasaAhora();
+      pen=convertir(monto,mon,t);
+      if(mon!=='PEN'&&!g.tasa) g.tasa=t;
+      if(g.ivaPen) g.ivaPen=pen*IVA;
+    }
+    Object.assign(g,{desc,monto,mon,cat,dia,pen,medio:medioSel});
+    avisar('Cambios guardados');
+  } else {
+    const t=tasaAhora(), ahora=Date.now();
+    E.gastos.push({id:ahora,cuando:ahora,desc,monto,mon,cat,dia,pen:convertir(monto,mon,t),tasa:t,medio:medioSel});
+  }
+  editando=null; cerrar(); pintarTodo(); await guardar();
+};
+$('g-borrar').onclick=async()=>{
+  const g=editando; if(!g) return;
+  const i=E.gastos.indexOf(g), eraAloj=E.alojamiento.gastoId===g.id;
+  E.gastos.splice(i,1);
+  if(eraAloj) E.alojamiento.gastoId=null;
+  editando=null; cerrar(); pintarTodo(); await guardar();
+  avisar('Gasto borrado',async()=>{
+    E.gastos.splice(Math.min(i,E.gastos.length),0,g);
+    if(eraAloj) E.alojamiento.gastoId=g.id;
+    pintarTodo(); await guardar();
+  });
+};
+
+/* ================= itinerario ================= */
+$('i-add').onclick=async()=>{
+  const dia=$('i-dia').value, h=$('i-hora').value.trim()||'—', t=$('i-txt').value.trim();
+  if(!t){ $('i-txt').focus(); return; }
+  const antes=pasoEdit?E.itinerario[pasoEdit.dia][pasoEdit.i]:null;
+  const p=antes?JSON.parse(JSON.stringify(antes)):{ok:false};
+  Object.assign(p,{h,t,nota:$('i-nota').value.trim(),costo:$('i-costo').value.trim(),est:leerEst()});
+  if(!p.est.length) delete p.est;
+  const lugar=$('i-lugar').value, dir=$('i-dir').value.trim();
+  const sinLugar=()=>{ delete p.ll; delete p.q; delete p.lugar; delete p.casa; };
+  if(dir){
+    $('i-estado').textContent='Buscando la dirección…'; $('i-add').disabled=true;
+    const g=await geocodificar(dir,dia);
+    $('i-add').disabled=false;
+    if(!g){ $('i-estado').textContent='No encontré esa dirección. Prueba con calle y número, o elige un lugar de la lista.'; return; }
+    sinLugar(); Object.assign(p,{ll:g.ll,q:g.q,lugar:dir});
+  }
+  else if(lugar==='__casa'){ sinLugar(); p.casa=true; }
+  else if(lugar==='__actual'){ delete p.casa; }
+  else if(lugar){ const c=CATALOGO.find(x=>x.n===lugar); sinLugar(); Object.assign(p,{ll:c.ll,q:c.q,lugar:c.n}); }
+  else sinLugar();
+  if(!p.nota) delete p.nota;
+  if(!p.costo) delete p.costo;
+  if(antes) E.itinerario[pasoEdit.dia].splice(pasoEdit.i,1);
+  E.itinerario[dia].push(p);
+  E.itinerario[dia].sort((a,b)=>a.h.localeCompare(b.h));
+  diaSel=dia; pasoSel=null; pasoEdit=null;
+  cerrar(); pintarDias(); pintarInicio(); await guardar();
+};
+$('i-quitar').onclick=async()=>{
+  if(!pasoEdit) return;
+  const lista=E.itinerario[pasoEdit.dia], i=pasoEdit.i, [x]=lista.splice(i,1);
+  pasoEdit=null; pasoSel=null;
+  cerrar(); pintarDias(); pintarInicio(); await guardar();
+  avisar('Parada quitada',async()=>{ lista.splice(i,0,x); pintarDias(); pintarInicio(); await guardar(); });
+};
+$('i-est-mas').onclick=()=>{ const f=filaEst(); $('i-est').appendChild(f); f.querySelector('.est-que').focus(); };
+let reajuste=null;
+window.addEventListener('resize',()=>{ clearTimeout(reajuste); reajuste=setTimeout(()=>{ if($('v-dias').classList.contains('on')) pintarDias(); },150); });
+
+/* ================= alojamiento: eventos ================= */
+['al-noches','al-precio','al-nombre'].forEach(id=>$(id).oninput=calcAloj);
+$('al-mon').onchange=calcAloj;
+$('al-save').onclick=async()=>{
+  if(!guardarAlojTmp()) return;
+  cerrar(); pintarTodo(); await guardar();
+};
+$('al-elegir').onclick=async()=>{
+  const o=guardarAlojTmp(); if(!o) return;
+  const antes=E.alojamiento.elegida;
+  E.alojamiento.elegida=o.id;
+  cerrar(); pintarTodo(); await guardar();
+  if(E.alojamiento.gastoId&&antes!==o.id) avisar('Ojo: el gasto de la reserva anterior sigue anotado.');
+};
+$('al-quitar').onclick=async()=>{
+  const ops=E.alojamiento.opciones, i=ops.findIndex(x=>x.id===alTmp.id); if(i<0) return;
+  const [o]=ops.splice(i,1), eraElegida=E.alojamiento.elegida===o.id;
+  if(eraElegida) E.alojamiento.elegida=null;
+  cerrar(); pintarTodo(); await guardar();
+  avisar('Opción quitada',async()=>{
+    ops.splice(i,0,o); if(eraElegida) E.alojamiento.elegida=o.id;
+    pintarTodo(); await guardar();
+  });
+};
+async function registrarAloj(){
+  const A=E.alojamiento, o=A.opciones.find(x=>x.id===A.elegida); if(!o||A.gastoId) return;
+  const c=costoAloj(o), bruto=o.precio*o.noches, neto=o.iva?bruto/(1+IVA):bruto;
+  const monto=o.mon==='ARS'?Math.round(neto):Math.round(neto*100)/100, ahora=Date.now();
+  const g={id:ahora,cuando:ahora,desc:`${o.nombre} · ${o.noches} ${o.noches===1?'noche':'noches'}${o.iva?' sin IVA':''}`,
+    monto,mon:o.mon,cat:'Alojamiento',dia:diaDe(ahora),pen:c.neto,tasa:c.t,ivaPen:c.ahorro};
+  E.gastos.push(g); A.gastoId=g.id;
+  const p=E.previo.find(x=>/^Alojamiento/.test(x.t)); if(p) p.ok=true;
+  pintarTodo(); await guardar();
+  avisar('Reserva anotada en Alojamiento',async()=>{
+    E.gastos=E.gastos.filter(x=>x!==g); A.gastoId=null; pintarTodo(); await guardar();
+  });
+}
+
+/* ================= resumen y exportar ================= */
+function datosResumen(){
+  const gastado=E.gastos.reduce((s,g)=>s+pesoDe(g),0);
+  return {gastado,saldo:E.presupuesto-gastado,porCat:totalesPorCat(),porDia:totalesPorDia(),iva:ivaAhorrado(),
+    top:E.gastos.slice().sort((a,b)=>pesoDe(b)-pesoDe(a)).slice(0,5)};
+}
+function pintarResumen(){
+  const R=datosResumen(), fila=(a,b,cls='')=>`<div class="salida"><span class="et">${a}</span><span class="vl ${cls}">${b}</span></div>`;
+  let h=fila('Presupuesto',s0(E.presupuesto))+fila('Gastado',s0(R.gastado))+fila('Te queda',s0(R.saldo),'destacado');
+  if(R.iva>0) h+=fila('IVA que no pagaste',s0(R.iva));
+  h+='<h4>Por sobre</h4><div>'+['Pasajes'].concat(CATS).filter(c=>R.porCat[c]||E.topes[c]).map(c=>
+    fila(`${c}${E.topes[c]?` <small>de ${s0(E.topes[c])}</small>`:''}`,s0(R.porCat[c]||0))).join('')+'</div>';
+  h+='<h4>Por día</h4><div>'+DIAS_G.filter(d=>R.porDia[d.f]).map(d=>fila(d.n,s0(R.porDia[d.f]))).join('')+'</div>';
+  if(R.top.length) h+='<h4>Lo más grande</h4><div>'+R.top.map(g=>fila(esc(g.desc),s0(pesoDe(g)))).join('')+'</div>';
+  $('resumen').innerHTML=h;
+}
+function textoResumen(){
+  const R=datosResumen(), L=[];
+  L.push('Viaje a Buenos Aires · 20 al 25 de noviembre de 2026','');
+  L.push(`Presupuesto: ${s0(E.presupuesto)}`,`Gastado: ${s0(R.gastado)}`,`Te queda: ${s0(R.saldo)}`);
+  if(R.iva>0) L.push(`IVA que no pagaste en el hotel: ${s0(R.iva)}`);
+  L.push('','Por sobre');
+  ['Pasajes'].concat(CATS).forEach(c=>{ if(R.porCat[c]||E.topes[c]) L.push(`• ${c}: ${s0(R.porCat[c]||0)}${E.topes[c]?` de ${s0(E.topes[c])}`:''}`); });
+  L.push('','Por día');
+  DIAS_G.forEach(d=>{ if(R.porDia[d.f]) L.push(`• ${d.n}: ${s0(R.porDia[d.f])}`); });
+  if(R.top.length){ L.push('','Lo más grande'); R.top.forEach(g=>L.push(`• ${g.desc}: ${s0(pesoDe(g))}`)); }
+  return L.join('\n');
+}
+function csvGastos(){
+  const q=v=>{ const s=String(v==null?'':v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  const filas=[['Día','Fecha anotado','Descripción','Sobre','Monto','Moneda','Soles','Pesos por dólar','Soles por dólar','Cotización','IVA no pagado (soles)']];
+  E.gastos.slice().sort((a,b)=>DIAS_G.findIndex(d=>d.f===a.dia)-DIAS_G.findIndex(d=>d.f===b.dia)||a.cuando-b.cuando).forEach(g=>{
+    filas.push([nomDia(g.dia),g.cuando>1?new Date(g.cuando).toLocaleString('sv-SE',{timeZone:TZ}).slice(0,16):'',g.desc,g.cat,
+      g.monto,g.mon,pesoDe(g).toFixed(2),g.tasa?Math.round(g.tasa.ars):'',g.tasa?g.tasa.pen.toFixed(3):'',
+      g.tasa?NOM_FUENTE[g.tasa.fuente]||g.tasa.fuente:'',g.ivaPen?g.ivaPen.toFixed(2):'']);
+  });
+  return '﻿'+filas.map(f=>f.map(q).join(',')).join('\r\n');
+}
+$('abrir-resumen').onclick=()=>{ pintarResumen(); abrir('resumen'); };
+$('x-compartir').onclick=async()=>{
+  const texto=textoResumen();
+  try{
+    if(navigator.share){ await navigator.share({title:'Resumen del viaje',text:texto}); return; }
+    await navigator.clipboard.writeText(texto); avisar('Resumen copiado. Pégalo donde quieras.');
+  }catch(e){ if(e&&e.name!=='AbortError') avisar('No se pudo compartir.'); }
+};
+$('x-csv').onclick=async()=>{
+  const nombre='gastos-viaje-buenos-aires.csv';
+  const blob=new Blob([csvGastos()],{type:'text/csv;charset=utf-8'});
+  try{
+    const f=new File([blob],nombre,{type:'text/csv'});
+    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){
+      await navigator.share({files:[f],title:'Gastos del viaje'}); return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  descargar(blob,nombre);
+};
+
+/* ================= ajustes ================= */
+function sumaTopes(){
+  let s=0; document.querySelectorAll('[data-tope]').forEach(i=>s+=numero(i.value)||0);
+  const pasajes=E.gastos.filter(g=>g.cat==='Pasajes').reduce((t,g)=>t+pesoDe(g),0);
+  const presu=numero($('a-presu').value)||0, libre=presu-pasajes, dif=Math.round(libre-s);
+  $('a-suma').textContent=`Los topes suman ${s0(s)}. Después de pasajes quedan ${s0(libre)}`
+    +(dif===0?', cuadra exacto.':dif>0?`, sobran ${s0(dif)} sin asignar.`:`, te pasas por ${s0(-dif)}.`);
+}
+$('abrir-ajustes').onclick=()=>{
+  $('a-presu').value=E.presupuesto;
+  $('a-sobres').innerHTML=CATS.map(c=>`
+    <div class="duo" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:8px">
+      <span style="font-size:14.5px">${c}</span>
+      <input type="number" inputmode="decimal" data-tope="${c}" value="${E.topes[c]||0}" aria-label="Tope de ${c}"></div>`).join('');
+  sumaTopes(); abrir('ajustes');
+};
+$('hoja-ajustes').addEventListener('input',sumaTopes);
+$('a-save').onclick=async()=>{
+  const p=numero($('a-presu').value); if(p>0) E.presupuesto=p;
+  document.querySelectorAll('[data-tope]').forEach(i=>E.topes[i.dataset.tope]=Math.max(0,numero(i.value)||0));
+  cerrar(); pintarTodo(); await guardar();
+};
+$('a-copiar').onclick=async()=>{
+  const b=$('a-copiar');
+  try{ await navigator.clipboard.writeText(JSON.stringify(E)); b.textContent='Copiado'; }
+  catch(e){ b.textContent='No se pudo copiar'; }
+  setTimeout(()=>b.textContent='Copiar respaldo de los datos',1500);
+};
+$('a-reset').onclick=async()=>{
+  const b=$('a-reset');
+  if(b.dataset.seguro!=='1'){ b.dataset.seguro='1'; b.textContent='Toca otra vez para borrar todo';
+    setTimeout(()=>{b.dataset.seguro='0';b.textContent='Empezar de cero';},4000); return; }
+  E=inicial(); b.dataset.seguro='0'; b.textContent='Empezar de cero';
+  cerrar(); pintarTodo(); await guardar();
+};
+
+/* ================= cambio: eventos ================= */
+$('c-monto').oninput=pintarCambio;
+$('segm').onclick=e=>{ const b=e.target.closest('[data-mon]'); if(!b)return; desde=b.dataset.mon; pintarCambio(); };
+$('segm-fuente').onclick=async e=>{
+  const b=e.target.closest('[data-fuente]'); if(!b) return;
+  E.fuente=b.dataset.fuente;
+  if(E.manual) avisar(`Guardada. La cotización ${FUENTES[E.fuente].et.toLowerCase()} manda cuando apagues tus tasas.`);
+  pintarTodo(); await guardar();
+};
+$('r-manual').onclick=async()=>{
+  E.manual=!E.manual;
+  pintarTodo(); await guardar();
+  if(!E.manual&&viejas(10)&&navigator.onLine!==false) actualizar(false);
+};
+$('r-save').onclick=async()=>{
+  const up=numero($('r-usdpen').value), au=numero($('r-arsusd').value);
+  if(!(up>0)){ $('r-usdpen').focus(); return; }
+  if(!(au>0)){ $('r-arsusd').focus(); return; }
+  E.tasas.usdPen=up; E.tasas.arsUsd=au; E.manual=true;
+  $('r-usdpen').blur(); $('r-arsusd').blur();
+  pintarTodo(); await guardar();
+  avisar('Listo. Ahora mandan tus tasas.');
+};
+$('c-refrescar').onclick=()=>actualizar(true);
+document.querySelector('#cinta .recarga').onclick=()=>actualizar(true);
+
+/* ================= clics generales ================= */
+document.body.addEventListener('click',async e=>{
+  const ir=e.target.closest('[data-ir]'); if(ir){ irA(ir.dataset.ir); return; }
+  const t=e.target.closest('button,a'); if(!t) return;
+  const ds=t.dataset;
+
+  if(ds.hoja!==undefined){ abrir(ds.hoja); return; }
+  if(ds.nuevoGasto!==undefined){ abrirGasto(null); return; }
+  if(ds.docs!==undefined){ abrirDocs(); return; }
+  if(ds.cambio!==undefined){ const c=E.billetera.cambios.find(x=>String(x.id)===ds.cambio); if(c) abrirCambio(c); return; }
+  if(ds.gasto!==undefined){ const g=E.gastos.find(x=>String(x.id)===ds.gasto); if(g) abrirGasto(g); return; }
+  if(ds.hoy!==undefined){
+    const d=DIAS.find(x=>x.f===fechaBA(Date.now()));
+    if(d){ diaSel=d.id; pasoSel=null; zonaSel=null; }
+    irA('dias'); return;
+  }
+  if(ds.dsel!==undefined){ diaSel=ds.dsel; pasoSel=null; zonaSel=null; pintarDias(); return; }
+  if(ds.zona!==undefined){ zonaSel=ds.zona; pasoSel=null; pintarDias(); return; }
+  if(ds.pcasa!==undefined){ pasoSel=pasoSel==='casa'?null:'casa'; pintarDias(); return; }
+  if(ds.psel!==undefined){
+    const i=+ds.psel;
+    pasoSel=pasoSel===i?null:i; pintarDias();
+    if(pasoSel!==null){
+      if(ds.mapa!==undefined) $('parada-'+i).scrollIntoView({behavior:'smooth',block:'center'});
+      else if(E.itinerario[diaSel][i].ll) window.scrollTo({top:$('ruta').getBoundingClientRect().top+window.scrollY-14,behavior:'smooth'});
+    }
+    return;
+  }
+  if(ds.peditar!==undefined){ abrirPaso(diaSel,+ds.peditar); return; }
+  if(ds.anotar!==undefined){ const [i,k]=ds.anotar.split(':').map(Number); anotarEstimado(i,k); return; }
+  if(ds.pasoNuevo!==undefined){ abrirPaso(diaSel||diaInicial(),null); return; }
+  if(ds.modo!==undefined){ modoGastos=ds.modo; pintarGastos(); return; }
+  if(ds.alojNueva!==undefined){ abrirAloj(null); return; }
+  if(ds.aloj!==undefined){ const o=E.alojamiento.opciones.find(x=>String(x.id)===ds.aloj); if(o) abrirAloj(o); return; }
+  if(ds.alojRegistrar!==undefined){ registrarAloj(); return; }
+  if(ds.alflag!==undefined){ alTmp[ds.alflag]=!alTmp[ds.alflag]; t.classList.toggle('on',alTmp[ds.alflag]); calcAloj(); return; }
+
+  if(ds.previo!==undefined){ const p=E.previo[+ds.previo]; p.ok=!p.ok; pintarInicio(); await guardar(); }
+  else if(ds.lug!==undefined){ const l=E.lugares[+ds.lug]; l.ok=!l.ok; pintarLugares(); await guardar(); }
+  else if(ds.ver!==undefined){
+    const l=E.lugares[+ds.ver], g=geoDe(l);
+    mostrarEnMapa({n:l.n,d:l.d,ll:g.ll,q:g.q||l.n+', Buenos Aires'}); pintarLugares();
+    window.scrollTo({top:$('mapa').getBoundingClientRect().top+window.scrollY-14,behavior:'smooth'});
+  }
+  else if(ds.casa!==undefined){
+    mostrarEnMapa(null); pintarLugares();
+    window.scrollTo({top:$('mapa').getBoundingClientRect().top+window.scrollY-14,behavior:'smooth'});
+  }
+  else if(ds.punto!==undefined){
+    lugarSel=null; mostrarEnMapa(PUNTOS[ds.punto]); pintarLugares();
+    window.scrollTo({top:$('mapa').getBoundingClientRect().top+window.scrollY-14,behavior:'smooth'});
+  }
+  else if(ds.dia!==undefined&&ds.i!==undefined){ const it=E.itinerario[ds.dia][+ds.i]; it.ok=!it.ok; pintarDias(); pintarInicio(); await guardar(); }
+});
+
+$('cerca').onclick=()=>{
+  if(!navigator.geolocation){ avisar('Este celular no comparte la ubicación.'); return; }
+  $('cerca').textContent='Buscando…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    aqui=[p.coords.latitude,p.coords.longitude];
+    $('cerca').textContent='Actualizar ubicación';
+    pintarLugares();
+  },()=>{
+    $('cerca').textContent='Cerca de mí';
+    avisar('No se pudo leer tu ubicación. Revisa el permiso del navegador.');
+  },{enableHighAccuracy:false,timeout:12000,maximumAge:300000});
+};
+
+/* ================= números de emergencia (verificados, ver fuentes en la conversación) ================= */
+const EMERGENCIAS={
+  ba:[
+    {n:'Policía',d:'Cualquier emergencia en la Ciudad',tel:'911',rojo:true},
+    {n:'SAME · emergencias médicas',d:'Ambulancia, 24 horas y gratis',tel:'107',rojo:true},
+    {n:'Bomberos',tel:'100',rojo:true},
+    {n:'Defensa Civil',tel:'103'},
+    {n:'Asistencia al turista',d:'Gratis, todos los días de 8 a 20 h',tel:'0800 999 2838'},
+    {n:'Defensoría del Turista',d:'Reclamos y ayuda a turistas',wa:'5491150261318'}
+  ],
+  peru:[
+    {n:'Consulado del Perú · emergencias',d:'Llamada o WhatsApp, solo emergencias. San Martín 128, Microcentro',tel:'+54 9 11 5141-8249',wa:'5491151418249',rojo:true},
+    {n:'Consulado del Perú',d:'Lunes a viernes de 8 a 15 h · conperbaires@consuladoperubaires.org'},
+    {n:'Embajada del Perú',d:'Av. del Libertador 1720 · lunes a viernes',tel:'+54 11 4802-2000'}
+  ],
+  uy:[
+    {n:'Emergencias en Uruguay',d:'Número nacional de emergencias',tel:'911',rojo:true}
+  ]
+};
+
+/* ================= billetera ================= */
+const NOM_MON={USD:'Dólares',PEN:'Soles',ARS:'Pesos arg.'};
+let cambioEdit=null;
+function saldosEfectivo(){
+  const b=E.billetera, r={USD:+b.inicial.USD||0,PEN:+b.inicial.PEN||0,ARS:+b.inicial.ARS||0};
+  b.cambios.forEach(c=>{ r[c.de.mon]-=c.de.m; r[c.a.mon]+=c.a.m; });
+  E.gastos.forEach(g=>{ if(g.medio==='efectivo'&&r[g.mon]!=null) r[g.mon]-=g.monto; });
+  return r;
+}
+function tasaDeCambio(c){
+  const {de,a}=c;
+  if(de.mon==='USD'&&a.mon==='ARS') return {txt:`${pesos(a.m/de.m)} por dólar`,ars:a.m/de.m};
+  if(de.mon==='ARS'&&a.mon==='USD') return {txt:`${pesos(de.m/a.m)} por dólar`,ars:de.m/a.m};
+  if(de.mon==='PEN'&&a.mon==='USD') return {txt:`S/\u00A0${nf(de.m/a.m,3)} por dólar`,pen:de.m/a.m};
+  if(de.mon==='USD'&&a.mon==='PEN') return {txt:`S/\u00A0${nf(a.m/de.m,3)} por dólar`,pen:a.m/de.m};
+  if(de.mon==='PEN'&&a.mon==='ARS') return {txt:`${pesos(a.m/de.m)} por sol`};
+  return {txt:''};
+}
+function pintarBilletera(){
+  const r=saldosEfectivo(), hay=Object.values(E.billetera.inicial).some(v=>+v>0)||E.billetera.cambios.length||E.gastos.some(g=>g.medio==='efectivo');
+  /* en la billetera los enteros van sin decimales para que entren en la cajita */
+  const corto=(v,m)=>m==='ARS'?pesos(v):(Math.abs(v%1)<0.005?(m==='USD'?'US$ ':'S/ ')+nf(v,0):fmon(v,m));
+  $('bil-saldos').innerHTML=['USD','ARS','PEN'].map(m=>`<div><span>${NOM_MON[m]}</span><b class="${r[m]<-0.004?'neg':''}">${corto(r[m],m)}</b></div>`).join('');
+  const cs=E.billetera.cambios.slice().sort((x,y)=>y.cuando-x.cuando);
+  $('bil-cambios').innerHTML=cs.length?'<div style="margin-top:8px">'+cs.map(c=>`<button class="item fila-btn" data-cambio="${c.id}">
+      <span class="pic">⇄</span><span class="cuerpo"><span class="t">${fmon(c.de.m,c.de.mon)} → ${fmon(c.a.m,c.a.mon)}</span>
+      <span class="s">${esc(nomDia(c.dia))}${tasaDeCambio(c).txt?' · '+tasaDeCambio(c).txt:''}</span></span></button>`).join('')+'</div>':'';
+  $('bil-nota').textContent=hay
+    ?'Baja con los gastos anotados como pagados en efectivo y con cada cambio de moneda.'
+    :'Anota con cuánto efectivo salen de Lima y la app lleva la cuenta de lo que les queda.';
+}
+function abrirCambio(c){
+  cambioEdit=c||null;
+  $('cm-titulo').textContent=c?'Editar cambio':'Registrar un cambio';
+  $('cm-dia').innerHTML=DIAS_G.map(d=>`<option value="${d.f}">${d.n}</option>`).join('');
+  $('cm-de').value=c?c.de.m:''; $('cm-demon').value=c?c.de.mon:'USD';
+  $('cm-a').value=c?c.a.m:''; $('cm-amon').value=c?c.a.mon:'ARS';
+  $('cm-dia').value=c?c.dia:diaDe(Date.now());
+  $('cm-usar').classList.remove('on'); $('cm-usar').setAttribute('aria-checked','false');
+  $('cm-borrar').hidden=!c; calcCambio(); abrir('cambio');
+}
+function calcCambio(){
+  const de={m:numero($('cm-de').value),mon:$('cm-demon').value}, a={m:numero($('cm-a').value),mon:$('cm-amon').value};
+  const ok=de.m>0&&a.m>0&&de.mon!==a.mon, t=ok?tasaDeCambio({de,a}):null;
+  let txt='\u00A0';
+  if(t&&t.ars) txt=`Te dieron ${t.txt}. El ${E.manual?'que usas ahora':FUENTES[E.fuente].et.toLowerCase()+' de hoy'} está en ${pesos(tasaArs())}.`;
+  else if(t&&t.pen) txt=`Te dieron ${t.txt}. Hoy el dólar en Perú está en S/\u00A0${nf(tasaPen(),3)}.`;
+  else if(t&&t.txt) txt=`Te dieron ${t.txt}.`;
+  $('cm-tasa').textContent=txt;
+  $('cm-usar').disabled=!(t&&(t.ars||t.pen));
+  return {de,a,ok,t};
+}
+['cm-de','cm-a'].forEach(id=>$(id).oninput=calcCambio);
+['cm-demon','cm-amon'].forEach(id=>$(id).onchange=calcCambio);
+$('cm-usar').onclick=()=>{ const on=!$('cm-usar').classList.contains('on'); $('cm-usar').classList.toggle('on',on); $('cm-usar').setAttribute('aria-checked',on); };
+$('cm-guardar').onclick=async()=>{
+  const {de,a,ok,t}=calcCambio();
+  if(!(de.m>0)){ $('cm-de').focus(); return; }
+  if(!(a.m>0)||!ok){ $('cm-a').focus(); return; }
+  const dia=$('cm-dia').value;
+  if(cambioEdit) Object.assign(cambioEdit,{de,a,dia});
+  else E.billetera.cambios.push({id:Date.now(),cuando:Date.now(),de,a,dia});
+  if($('cm-usar').classList.contains('on')&&t){
+    /* al pasar a tasas propias se congela la otra tasa con su valor de ahora */
+    const up=tasaPen(), au=tasaArs();
+    E.tasas.usdPen=t.pen||up; E.tasas.arsUsd=t.ars||au; E.manual=true;
+  }
+  cambioEdit=null; cerrar(); pintarTodo(); await guardar();
+};
+$('cm-borrar').onclick=async()=>{
+  const c=cambioEdit; if(!c) return;
+  const lista=E.billetera.cambios, i=lista.indexOf(c); lista.splice(i,1);
+  cambioEdit=null; cerrar(); pintarTodo(); await guardar();
+  avisar('Cambio borrado',async()=>{ lista.splice(i,0,c); pintarTodo(); await guardar(); });
+};
+$('bil-cambio').onclick=()=>abrirCambio(null);
+$('bil-ajustar').onclick=()=>{
+  const b=E.billetera.inicial;
+  $('bil-usd').value=b.USD||''; $('bil-pen').value=b.PEN||''; $('bil-ars').value=b.ARS||'';
+  abrir('bil');
+};
+$('bil-guardar').onclick=async()=>{
+  E.billetera.inicial={USD:Math.max(0,numero($('bil-usd').value)||0),PEN:Math.max(0,numero($('bil-pen').value)||0),ARS:Math.max(0,numero($('bil-ars').value)||0)};
+  cerrar(); pintarTodo(); await guardar();
+};
+
+/* ================= clima ================= */
+const CLIMA_TIPICO={ba:{max:25,min:16},uy:{max:24,min:14}};
+function iconoClima(c){
+  if(c===0) return ['☀️','Despejado'];
+  if(c<=2) return ['🌤️','Algo nublado'];
+  if(c===3) return ['☁️','Nublado'];
+  if(c<=48) return ['🌫️','Neblina'];
+  if(c<=57) return ['🌦️','Llovizna'];
+  if(c<=67) return ['🌧️','Lluvia'];
+  if(c<=77) return ['🌨️','Frío con nieve'];
+  if(c<=82) return ['🌦️','Chubascos'];
+  return ['⛈️','Tormenta'];
+}
+async function traerClima(){
+  const hoy=fechaBA(Date.now()), limite=fechaBA(Date.now()+15*86400000);
+  if(hoy>'2026-11-25'||limite<'2026-11-21'||navigator.onLine===false) return;
+  if(E.clima&&Date.now()-E.clima.cuando<3*3600000) return;
+  const ini=hoy>'2026-11-21'?hoy:'2026-11-21', fin=limite<'2026-11-25'?limite:'2026-11-25';
+  const url=(lat,lng)=>`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FArgentina%2FBuenos_Aires&start_date=${ini}&end_date=${fin}`;
+  try{
+    const [ba,uy]=await Promise.all([conTiempo(url(-34.60,-58.40)),conTiempo(url(-34.47,-57.85))]);
+    const dias={};
+    const leer=(r,z)=>r.daily.time.forEach((t,i)=>{ (dias[t]=dias[t]||{})[z]={cod:r.daily.weather_code[i],max:r.daily.temperature_2m_max[i],min:r.daily.temperature_2m_min[i],lluvia:r.daily.precipitation_probability_max[i]}; });
+    leer(ba,'ba'); leer(uy,'uy');
+    E.clima={cuando:Date.now(),dias};
+    await guardar();
+    if($('v-dias').classList.contains('on')) pintarDias();
+  }catch(e){}
+}
+function pintarClima(d){
+  const el=$('dia-clima'), z=d.id==='d22'?'uy':'ba', lugar=z==='uy'?'Colonia':'Buenos Aires';
+  const c=E.clima&&E.clima.dias&&E.clima.dias[d.f]&&E.clima.dias[d.f][z];
+  el.hidden=false;
+  if(c){
+    const [ic,txt]=iconoClima(c.cod), consejos=[];
+    if(c.lluvia>=50) consejos.push('lleven paraguas');
+    if(c.min<14) consejos.push('una casaca para la noche');
+    if(c.max>=29) consejos.push('agua y bloqueador');
+    el.innerHTML=`<span class="ic">${ic}</span><div class="cuerpo"><b>${Math.round(c.max)}° / ${Math.round(c.min)}°</b> · ${txt} en ${lugar}
+      <div class="s">Lluvia ${c.lluvia==null?'—':c.lluvia+'%'}${consejos.length?' · '+consejos.join(', '):''} · pronóstico ${haceCuanto(E.clima.cuando)}</div></div>`;
+  } else {
+    const t=CLIMA_TIPICO[z];
+    el.innerHTML=`<span class="ic">🌡️</span><div class="cuerpo"><b>≈ ${t.max}° / ${t.min}°</b> · lo normal en noviembre en ${lugar}
+      <div class="s">El pronóstico real aparece desde el 6 de noviembre.</div></div>`;
+  }
+}
+
+/* ================= documentos ================= */
+const docsDB={
+  abrir(){ return this._p||(this._p=new Promise((ok,mal)=>{ const r=indexedDB.open('viaje-ba-docs',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('docs',{keyPath:'id'}); r.onsuccess=()=>ok(r.result); r.onerror=()=>mal(r.error); })); },
+  async tx(modo,fn){ const db=await this.abrir(); return new Promise((ok,mal)=>{ const t=db.transaction('docs',modo), req=fn(t.objectStore('docs'));
+    t.oncomplete=()=>ok(req&&req.result); t.onerror=()=>mal(t.error); t.onabort=()=>mal(t.error); }); },
+  todos(){ return this.tx('readonly',st=>st.getAll()); },
+  poner(d){ return this.tx('readwrite',st=>st.put(d)); },
+  quitar(id){ return this.tx('readwrite',st=>st.delete(id)); }
+};
+const TIPOS_DOC=['Pasaporte','DNI','Seguro','Pasajes','Reserva','Tour Colonia','Otro'];
+let docsURLs=[], docPendiente=null, docTipo='Pasaporte', docVisto=null;
+const blobDe=d=>new Blob([d.datos],{type:d.mime});
+async function comprimir(file){
+  if(!/^image\//.test(file.type)||file.type==='image/gif') return file;
+  try{
+    const url=URL.createObjectURL(file);
+    const img=await new Promise((ok,mal)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=mal; i.src=url; });
+    const k=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*k); c.height=Math.round(img.naturalHeight*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url);
+    const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',0.85));
+    return b&&b.size<file.size?b:file;
+  }catch(e){ return file; }
+}
+async function pintarDocs(){
+  docsURLs.forEach(u=>URL.revokeObjectURL(u)); docsURLs=[];
+  let docs=[];
+  try{ docs=(await docsDB.todos()).sort((a,b)=>a.creado-b.creado); }
+  catch(e){ $('docs-lista').innerHTML='<div class="vacio" style="grid-column:1/-1">Este navegador no deja guardar documentos.</div>'; return; }
+  $('docs-lista').innerHTML=docs.map(d=>{
+    let vista='<div class="pdf">PDF</div>';
+    if(d.mime.startsWith('image/')){ const u=URL.createObjectURL(blobDe(d)); docsURLs.push(u); vista=`<img src="${u}" alt="">`; }
+    return `<button class="doc" data-doc="${d.id}">${vista}<span>${esc(d.nombre)}</span></button>`;
+  }).join('')+'<button class="doc nuevo" id="doc-mas"><b>+</b>Agregar</button>';
+  $('doc-mas').onclick=()=>$('doc-archivo').click();
+  const kb=docs.reduce((t,d)=>t+d.datos.byteLength,0)/1024;
+  $('doc-espacio').textContent=docs.length?`${docs.length} ${docs.length===1?'documento':'documentos'} · ${kb<1024?Math.round(kb)+' KB':nf(kb/1024,1)+' MB'}. Igual guarda copias en tu galería.`:'Toma foto o captura de pasaporte, seguro, reserva, pasajes y el voucher del tour.';
+}
+function pintarChips(){
+  $('doc-chips').innerHTML=TIPOS_DOC.map(t=>`<button type="button" class="${t===docTipo?'on':''}" data-doctipo="${t}">${t}</button>`).join('');
+}
+$('doc-archivo').onchange=()=>{
+  const f=$('doc-archivo').files[0]; $('doc-archivo').value='';
+  if(!f) return;
+  docPendiente=f; docTipo=/pdf/i.test(f.type)?'Reserva':'Pasaporte';
+  $('doc-nombre').value=docTipo; pintarChips(); $('doc-nuevo').hidden=false;
+  $('doc-nuevo').scrollIntoView({block:'nearest'});
+};
+$('doc-chips').onclick=e=>{ const b=e.target.closest('[data-doctipo]'); if(!b) return; const antes=docTipo; docTipo=b.dataset.doctipo;
+  if(!$('doc-nombre').value.trim()||$('doc-nombre').value===antes) $('doc-nombre').value=docTipo; pintarChips(); };
+$('doc-cancelar').onclick=()=>{ docPendiente=null; $('doc-nuevo').hidden=true; };
+$('doc-guardar').onclick=async()=>{
+  if(!docPendiente) return;
+  const b=$('doc-guardar'); b.disabled=true; b.textContent='Guardando…';
+  try{
+    const blob=await comprimir(docPendiente);
+    await docsDB.poner({id:Date.now(),nombre:$('doc-nombre').value.trim()||docTipo,tipo:docTipo,mime:blob.type||docPendiente.type||'application/octet-stream',creado:Date.now(),datos:await blob.arrayBuffer()});
+    try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+    docPendiente=null; $('doc-nuevo').hidden=true; await pintarDocs();
+  }catch(e){ avisar('No se pudo guardar. Prueba con una foto más liviana.'); }
+  b.disabled=false; b.textContent='Guardar documento';
+};
+async function abrirDocs(){ $('doc-nuevo').hidden=true; docPendiente=null; abrir('docs'); await pintarDocs(); }
+async function verDoc(id){
+  const d=(await docsDB.todos()).find(x=>x.id===id); if(!d) return;
+  docVisto=d;
+  const u=URL.createObjectURL(blobDe(d)); docsURLs.push(u);
+  $('visor-nom').textContent=d.nombre;
+  $('visor-cuerpo').innerHTML=d.mime.startsWith('image/')?`<img src="${u}" alt="${esc(d.nombre)}">`:`<iframe src="${u}" title="${esc(d.nombre)}"></iframe>`;
+  $('visor-borrar').dataset.seguro='0'; $('visor-borrar').textContent='Borrar';
+  $('visor').hidden=false;
+}
+$('visor-cerrar').onclick=()=>{ $('visor').hidden=true; $('visor-cuerpo').innerHTML=''; docVisto=null; };
+$('visor-compartir').onclick=async()=>{
+  if(!docVisto) return;
+  const ext=docVisto.mime.includes('pdf')?'pdf':'jpg', f=new File([blobDe(docVisto)],`${docVisto.nombre}.${ext}`,{type:docVisto.mime});
+  try{ if(navigator.canShare&&navigator.canShare({files:[f]})) await navigator.share({files:[f],title:docVisto.nombre}); else descargar(f,f.name); }
+  catch(e){ if(e&&e.name!=='AbortError') avisar('No se pudo compartir.'); }
+};
+$('visor-borrar').onclick=async()=>{
+  const b=$('visor-borrar');
+  if(b.dataset.seguro!=='1'){ b.dataset.seguro='1'; b.textContent='¿Borrar?'; setTimeout(()=>{ b.dataset.seguro='0'; b.textContent='Borrar'; },3000); return; }
+  if(!docVisto) return;
+  await docsDB.quitar(docVisto.id);
+  $('visor').hidden=true; $('visor-cuerpo').innerHTML=''; docVisto=null; await pintarDocs();
+};
+$('docs-lista').onclick=e=>{ const b=e.target.closest('[data-doc]'); if(b) verDoc(+b.dataset.doc); };
+
+/* ================= emergencias ================= */
+function filaTel(x){
+  const llamar=x.tel?`<a class="tel ${x.rojo?'rojo':''}" href="tel:${x.tel.replace(/[^+\d]/g,'')}">${esc(x.tel.length>6?'Llamar':x.tel)}</a>`:'';
+  const wa=x.wa?`<a class="tel" href="https://wa.me/${x.wa}" target="_blank" rel="noopener">WhatsApp</a>`:'';
+  const num=x.tel&&x.tel.length>6?`<div class="s">${esc(x.tel)}</div>`:'';
+  return `<div class="item"><div class="cuerpo"><div class="t envuelve">${esc(x.n)}</div>${x.d?`<div class="s">${esc(x.d)}</div>`:''}${num}</div>
+    <div style="display:flex;gap:6px;flex-shrink:0">${wa}${llamar}</div></div>`;
+}
+function dirTaxi(){
+  const c=casaElegida();
+  return c?{dir:c.dir,barrio:[c.barrio,'Buenos Aires'].filter(Boolean).join(', '),aprox:c.aprox}:null;
+}
+function abrirSOS(){
+  const t=dirTaxi();
+  $('sos-dir').textContent=t?t.dir+(t.barrio?', '+t.barrio:''):'Elige tu alojamiento en Gastos → Alojamiento';
+  $('sos-grande').hidden=!t;
+  $('sos-ba').innerHTML=EMERGENCIAS.ba.map(filaTel).join('');
+  $('sos-peru').innerHTML=EMERGENCIAS.peru.map(filaTel).join('');
+  $('sos-uy').innerHTML=EMERGENCIAS.uy.map(filaTel).join('');
+  const em=E.emergencia;
+  $('sos-seg').value=em.seguro; $('sos-segtel').value=em.seguroTel; $('sos-poliza').value=em.poliza;
+  $('sos-cnom').value=em.contacto; $('sos-ctel').value=em.contactoTel;
+  $('sos-seguro').innerHTML=[em.seguroTel&&filaTel({n:em.seguro||'Seguro de viaje',d:em.poliza?'Póliza '+em.poliza:'',tel:em.seguroTel,rojo:true}),
+    em.contactoTel&&filaTel({n:em.contacto||'Contacto en Perú',tel:em.contactoTel})].filter(Boolean).join('');
+  abrir('sos');
+}
+$('abrir-sos').onclick=abrirSOS;
+$('sos-grande').onclick=()=>{ const t=dirTaxi(); if(!t) return; $('gt-dir').textContent=t.dir; $('gt-barrio').textContent=t.barrio; $('grande-taxi').hidden=false; };
+$('grande-taxi').onclick=()=>{ $('grande-taxi').hidden=true; };
+$('sos-guardar').onclick=async()=>{
+  E.emergencia={seguro:$('sos-seg').value.trim(),seguroTel:$('sos-segtel').value.trim(),poliza:$('sos-poliza').value.trim(),contacto:$('sos-cnom').value.trim(),contactoTel:$('sos-ctel').value.trim()};
+  cerrar(); await guardar(); avisar('Datos de emergencia guardados');
+};
+
+/* ================= respaldo ================= */
+function descargar(blob,nombre){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+$('a-archivo').onclick=async()=>{
+  const nombre=`respaldo-viaje-ba-${fechaBA(Date.now())}.json`, blob=new Blob([JSON.stringify(E)],{type:'application/json'});
+  try{
+    const f=new File([blob],nombre,{type:'application/json'});
+    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:'Respaldo del viaje'}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  descargar(blob,nombre);
+};
+$('a-restaurar').onclick=()=>{ $('rs-texto').value=''; $('rs-estado').innerHTML='&nbsp;'; $('rs-aplicar').dataset.seguro='0'; $('rs-aplicar').textContent='Restaurar'; abrir('restaurar'); };
+$('rs-elegir').onclick=()=>$('rs-archivo').click();
+$('rs-archivo').onchange=async()=>{
+  const f=$('rs-archivo').files[0]; $('rs-archivo').value=''; if(!f) return;
+  $('rs-texto').value=await f.text(); $('rs-estado').textContent=`Archivo cargado: ${f.name}`;
+};
+$('rs-aplicar').onclick=async()=>{
+  const b=$('rs-aplicar'); let d;
+  try{ d=JSON.parse($('rs-texto').value); }catch(e){ $('rs-estado').textContent='Ese texto no es un respaldo válido.'; return; }
+  if(!d||typeof d!=='object'||!Array.isArray(d.gastos)||!d.itinerario){ $('rs-estado').textContent='No parece un respaldo de esta app.'; return; }
+  if(b.dataset.seguro!=='1'){
+    b.dataset.seguro='1'; b.textContent=`Toca otra vez: reemplaza tus ${E.gastos.length} gastos por ${d.gastos.length}`;
+    setTimeout(()=>{ b.dataset.seguro='0'; b.textContent='Restaurar'; },5000); return;
+  }
+  const antes=JSON.stringify(E);
+  try{ localStorage.setItem(CLAVE+':antes-de-restaurar',antes); }catch(e){}
+  E=migrar(d); await guardar(); cerrar(); pintarTodo();
+  avisar('Respaldo restaurado',async()=>{ E=migrar(JSON.parse(antes)); await guardar(); pintarTodo(); });
+};
+
+/* ================= relojes ================= */
+function partesHora(tz,d){
+  const p=Object.fromEntries(new Intl.DateTimeFormat('es-PE',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23',weekday:'short',day:'numeric',month:'short'})
+    .formatToParts(d).map(x=>[x.type,x.value]));
+  return {hm:p.hour+':'+p.minute, min:(+p.hour)*60+(+p.minute), dia:`${p.weekday.replace('.','')} ${p.day} ${p.month.replace('.','')}`};
+}
+function pintarRelojes(){
+  const ahora=new Date(), pe=partesHora('America/Lima',ahora), ar=partesHora(TZ,ahora);
+  $('hora-pe').textContent=pe.hm; $('dia-pe').textContent=pe.dia;
+  $('hora-ar').textContent=ar.hm; $('dia-ar').textContent=ar.dia;
+  let dif=Math.round((ar.min-pe.min)/60); if(dif>12) dif-=24; if(dif<-12) dif+=24;
+  $('hora-dif').textContent=(dif>=0?'+':'')+dif+' h';
+}
+
+/* ================= arranque ================= */
+function pintarCuenta(){
+  const faltan=Math.ceil((new Date('2026-11-20T22:40:00-05:00')-new Date())/86400000);
+  $('cuenta').textContent=faltan>1?`Faltan ${faltan} días · 20–25 nov`:faltan===1?'Mañana viajan · 20–25 nov':'Buenos Aires · 20–25 nov';
+}
+if('serviceWorker' in navigator){
+  const reg=()=>navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(document.readyState==='complete') reg(); else window.addEventListener('load',reg);
+}
+(async function(){
+  const guardado=await almacen.leer();
+  E=migrar(guardado);
+  await guardar();
+  $('g-dia').innerHTML=DIAS_G.map(d=>`<option value="${d.f}">${d.n}</option>`).join('');
+  $('i-dia').innerHTML=DIAS.map(d=>`<option value="${d.id}">${d.n}</option>`).join('');
+  pintarCuenta();
+  pintarRelojes(); setInterval(pintarRelojes,15000);
+  pintarTodo();
+  if(viejas(10)&&navigator.onLine!==false) actualizar(false);
+  traerClima();
+
+  /* en tiempo real: cada minuto se refresca el "hace X min" y cada 10 se traen cotizaciones nuevas */
+  setInterval(()=>{
+    pintarCinta(); pintarCuenta(); traerClima();
+    if(!document.hidden&&navigator.onLine!==false&&viejas(10)) actualizar(false);
+  },60000);
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden) pintarRelojes();
+    if(!document.hidden&&navigator.onLine!==false&&viejas(10)) actualizar(false);
+  });
+  window.addEventListener('online',()=>{ $('mapa-off').hidden=true; if(mapaListo) $('mapa-frame').src=$('mapa-frame').src; actualizar(false); });
+  window.addEventListener('offline',()=>{ $('mapa-off').hidden=false; });
+})();
+</script>
+</body>
+</html>

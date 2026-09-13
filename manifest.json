@@ -1,0 +1,21 @@
+{
+  "name": "Viaje a Buenos Aires",
+  "short_name": "Viaje BA",
+  "description": "Presupuesto, itinerario y conversión de moneda para el viaje a Buenos Aires.",
+  "lang": "es-PE",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E7C7B",
+  "theme_color": "#0E7C7B",
+  "icons": [
+    { "src": "iconos/jsg-96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "iconos/jsg-120.png", "sizes": "120x120", "type": "image/png" },
+    { "src": "iconos/jsg-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "iconos/jsg-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "iconos/jsg-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "iconos/jsg-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "iconos/jsg-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
