@@ -1,6 +1,6 @@
 /* Viaje BA — service worker
    Sube la versión cada vez que cambies index.html: así el celular se entera y actualiza. */
-const VERSION = 'viaje-ba-v13';
+const VERSION = 'viaje-ba-v14';
 // Los mapas guardados para usar sin internet viven aparte y sobreviven a las actualizaciones.
 const MAPAS = 'viaje-ba-mapas';
 const ARMAZON = [

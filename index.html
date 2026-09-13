@@ -533,10 +533,13 @@
 
     <div class="bloque">
       <div class="tit">Cómo llevar la plata</div>
-      <div class="item"><span class="pic">$</span><div class="cuerpo"><div class="t">Efectivo en dólares</div><div class="s">Billetes de 100, sin roturas ni sellos.</div></div></div>
-      <div class="item"><span class="pic">⌂</span><div class="cuerpo"><div class="t">El hotel con tarjeta</div><div class="s">Si el hotel está inscripto y pagas con tarjeta emitida en Perú, no pagas el 21% de IVA. Airbnb no califica.</div></div></div>
-      <div class="item"><span class="pic">◷</span><div class="cuerpo"><div class="t">Cambia de a poco</div><div class="s">Lo de dos o tres días por vez.</div></div></div>
-      <div class="item"><span class="pic">◉</span><div class="cuerpo"><div class="t">Tarjeta SUBE</div><div class="s">Para subte y colectivos. Se compra en kioscos y se carga con efectivo.</div></div></div>
+      <div class="item"><span class="pic">S/</span><div class="cuerpo"><div class="t">Los soles se cambian en Lima</div><div class="s">Allá casi nadie compra soles. Pásenlos a dólares antes de viajar, en billetes de 100 nuevos, sin roturas ni sellos.</div></div></div>
+      <div class="item"><span class="pic">$</span><div class="cuerpo"><div class="t">Unos US$ 200 en efectivo</div><div class="s">Cambien US$ 100 al llegar y guarden el resto de reserva. Alcanza para El Desnivel, la SUBE, propinas y carritos.</div></div></div>
+      <div class="item"><span class="pic">⇄</span><div class="cuerpo"><div class="t">Dónde cambiar</div><div class="s">En un banco o casa de cambio oficial: hoy el dólar blue y el oficial casi no se diferencian. Nunca con los "arbolitos" de la calle Florida.</div></div></div>
+      <div class="item"><span class="pic">▭</span><div class="cuerpo"><div class="t">Tarjeta de crédito para casi todo</div><div class="s">A la tarjeta peruana le cobran cerca del dólar MEP. Lleven una Visa y una Mastercard, guardadas por separado.</div></div></div>
+      <div class="item"><span class="pic">✓</span><div class="cuerpo"><div class="t">Paguen siempre en pesos</div><div class="s">Si el datáfono ofrece cobrar en soles o dólares, elijan pesos: la conversión de la tienda sale más cara.</div></div></div>
+      <div class="item"><span class="pic">UY</span><div class="cuerpo"><div class="t">En Colonia, con tarjeta</div><div class="s">A los turistas les devuelven impuestos en restaurantes, y los pesos argentinos casi no sirven allá.</div></div></div>
+      <div class="item"><span class="pic">◉</span><div class="cuerpo"><div class="t">Tarjeta SUBE</div><div class="s">Para subte y colectivos. Se compra en kioscos y se carga con efectivo; con una sola pagan los dos.</div></div></div>
     </div>
   </section>
 
@@ -822,7 +825,7 @@ const almacen={
 };
 
 /* ================= datos base ================= */
-const VER=13;
+const VER=14;
 const TZ='America/Argentina/Buenos_Aires';
 const DIAS=[
   {id:'d21',f:'2026-11-21',n:'Sábado 21',s:'Caminata por el centro para ambientarse'},
@@ -1098,12 +1101,14 @@ const PREVIO_V12=[
   {t:'Pasaporte o DNI vigente',s:'Como peruano entras con DNI por Mercosur, pero el pasaporte nunca falla. Para la Casa Rosada piden pasaporte.'},
   {t:'Alojamiento reservado',s:'Confirma con el anfitrión la llegada temprano (08:00) y la salida a las 03:15 del miércoles.'},
   {t:'Uso internacional activado',s:'En la app del banco, débito y crédito. Pregunta también qué comisión cobran por compras en el exterior.'},
+  {t:'Dos tarjetas en lugares separados',s:'Una Visa y una Mastercard, por si una falla o se pierde. La de menor comisión internacional para el día a día.'},
+  {t:'Tarjeta agregada en Uber',s:'Háganlo desde Lima, para no hacerlo a las 6 de la mañana en Ezeiza.'},
   {t:'Reservar la visita a la Casa Rosada',s:'Gratis en visitas.casarosada.gob.ar, para el sábado 21 a las 16:00. Los turnos abren 15 días antes.',desde:'2026-11-06'},
   {t:'Comprar la visita guiada al Teatro Colón',s:'En teatrocolon.org.ar, para el sábado 21 a las 11:30.'},
   {t:'Confirmar la terminal del barco a Colonia',s:'Buquebus y Colonia Express salen de puertos distintos. Con eso se ajusta la hora del Uber del domingo.'},
   {t:'Internet en el celular',s:'Tu eSIM de Entel sirve con roaming: activa "Roaming activo" en Mi Entel y revisa cuántos GB de roaming trae tu plan.'},
   {t:'Mapas guardados sin internet',s:'En Días, al final: "Guardar mapas de todos los días", con Wi-Fi y después de cerrar el plan.'},
-  {t:'Dólares en efectivo',s:'Billetes de 100 en buen estado. Allá cambien de a poco y guarden pesos para El Desnivel (solo efectivo), colectivos y propinas.'},
+  {t:'Dólares en efectivo',s:'Cambien sus soles a dólares acá en Lima: unos US$ 200 en billetes de 100 nuevos. Guarden pesos para El Desnivel (solo efectivo), colectivos y propinas.'},
   {t:'Documentos en la app',s:'Pasaporte, seguro, reserva, pasajes y voucher del tour, guardados en Documentos para verlos sin señal.'},
   {t:'Datos del seguro en Emergencias',s:'Aseguradora, teléfono 24 h y póliza, en el botón del escudo de arriba.'},
   {t:'Uber reservado para el 25',s:'Con Uber Reserve, para salir a las 03:15 hacia Aeroparque. Plan B: radiotaxi pedido la noche anterior.'},
@@ -1130,6 +1135,45 @@ function actualizarPrevio(lista){
   });
   return nueva.concat(propios);
 }
+/* v14: los lugares de la Guía son los del plan, con su día */
+const LUGARES_V14=[
+  {n:'El Ateneo Grand Splendid',d:'Sábado 21 · librería dentro de un antiguo teatro',p:'Gratis',de:'El Ateneo Grand Splendid'},
+  {n:'Palacio de Aguas Corrientes',d:'Sábado 21 · la fachada, el museo cierra los sábados',p:'Gratis',de:'Palacio de Aguas Corrientes'},
+  {n:'Teatro Colón',d:'Sábado 21 · visita guiada, compren la entrada antes',p:'Con entrada',de:'Teatro Colón'},
+  {n:'Obelisco',d:'Sábado 21 · la foto clásica en la 9 de Julio',p:'Gratis',de:'Obelisco'},
+  {n:'Café Tortoni',d:'Sábado 21 · el café más antiguo, suele haber cola',p:'Café',de:'Café Tortoni'},
+  {n:'Casa Rosada y Plaza de Mayo',d:'Sábado 21 · visita guiada con reserva y pasaporte',p:'Gratis',de:'Casa Rosada'},
+  {n:'Colonia del Sacramento',d:'Domingo 22 · casco histórico en Uruguay',p:'Tour pagado'},
+  {n:'Calle de los Suspiros',d:'Domingo 22 · la postal de Colonia',p:'Gratis',de:'Calle de los Suspiros'},
+  {n:'Faro de Colonia',d:'Domingo 22 · suban para ver el río y los techos',p:'Entrada chica',de:'Faro de Colonia'},
+  {n:'Puerto Madero y Puente de la Mujer',d:'Domingo 22 · de noche, al volver del barco',p:'Gratis',de:'Puente de la Mujer'},
+  {n:'Cementerio de la Recoleta',d:'Lunes 23 · la bóveda de la familia Duarte, con Evita',p:'$ 24.000 c/u',de:'Cementerio de la Recoleta'},
+  {n:'Floralis Genérica',d:'Lunes 23 · la flor gigante de acero',p:'Gratis',de:'Floralis Genérica'},
+  {n:'Jardín Japonés',d:'Lunes 23 · estanques, puentes y carpas koi',p:'$ 24.000 c/u',de:'Jardín Japonés'},
+  {n:'Rosedal de Palermo',d:'Lunes 23 · los bosques de Palermo en primavera',p:'Gratis',de:'Rosedal de Palermo'},
+  {n:'Mercado de San Telmo',d:'Martes 24 · anticuarios y puestos de comida desde las 11',p:'Gratis',de:'Mercado de San Telmo'},
+  {n:'Caminito',d:'Martes 24 · de día y sin salir de la zona turística',p:'Gratis',de:'Caminito'},
+  {n:'Reserva Ecológica Costanera Sur',d:'Martes 24 · caminata junto al río',p:'Gratis',de:'Reserva Ecológica Costanera Sur'},
+  {n:'Galerías Pacífico',d:'Martes 24 · miren los murales de la cúpula',p:'Gratis',de:'Galerías Pacífico'}
+];
+/* nombres de la lista anterior que pasan a otro nombre, para conservar lo marcado como visitado */
+const LUGAR_RENOMBRE={'Plaza de Mayo y Casa Rosada':'Casa Rosada y Plaza de Mayo','Puerto Madero':'Puerto Madero y Puente de la Mujer','Bosques de Palermo y Rosedal':'Rosedal de Palermo'};
+const LUGARES_VIEJOS=new Set(['Cementerio de la Recoleta','Feria de San Telmo','Caminito','Teatro Colón','El Ateneo Grand Splendid','Café Tortoni',
+  'Plaza de Mayo y Casa Rosada','Bosques de Palermo y Rosedal','MALBA','Puerto Madero','Colonia del Sacramento','Parrilla de barrio','Heladería artesanal']);
+function lugaresV14(viejos){
+  const lista=LUGARES_V14.map(x=>{
+    const paso=x.de&&Object.values(PLAN_V8).flat().find(p=>p.lugar===x.de);
+    const g=paso?{ll:paso.ll,q:paso.q}:(GEO[x.n]||{});
+    return {n:x.n,d:x.d,p:x.p,ll:g.ll,q:g.q,ok:false};
+  });
+  const propios=[];
+  (viejos||[]).forEach(l=>{
+    const nombre=LUGAR_RENOMBRE[l.n]||l.n, n=lista.find(x=>x.n===nombre);
+    if(n){ if(l.ok) n.ok=true; }
+    else if(!LUGARES_VIEJOS.has(l.n)||l.ok) propios.push(l);   /* lo quitado del plan se conserva solo si ya lo visitaron */
+  });
+  return lista.concat(propios);
+}
 const LUGAR_COLONIA={n:'Colonia del Sacramento',d:'Uruguay · casco histórico, domingo 22 en barco',p:'Tour pagado',ok:false};
 
 function inicial(){const e={
@@ -1153,21 +1197,7 @@ function inicial(){const e={
          {h:'05:30',t:'Despegue a Lima',ok:false},
          {h:'08:15',t:'Llegada a Lima',ok:false}]
   },
-  lugares:[
-    {n:'Cementerio de la Recoleta',d:'Recoleta · mausoleos y la tumba de Evita',p:'USD 12',ok:false},
-    {n:'Feria de San Telmo',d:'San Telmo · solo domingos, desde Plaza Dorrego',p:'Gratis',ok:false},
-    {n:'Caminito',d:'La Boca · de día y sin salir de la zona turística',p:'Gratis',ok:false},
-    {n:'Teatro Colón',d:'Centro · la visita guiada vale cada peso',p:'USD 20',ok:false},
-    {n:'El Ateneo Grand Splendid',d:'Recoleta · librería dentro de un teatro, el sábado 21',p:'Gratis',ok:false},
-    {n:'Café Tortoni',d:'Av. de Mayo · el café más viejo, suele haber cola',p:'USD 10 c/u',ok:false},
-    {n:'Plaza de Mayo y Casa Rosada',d:'Centro · corazón político del país',p:'Gratis',ok:false},
-    {n:'Bosques de Palermo y Rosedal',d:'Palermo · parque enorme, perfecto en primavera',p:'Gratis',ok:false},
-    {n:'MALBA',d:'Palermo · arte latinoamericano, Frida y Botero',p:'USD 10',ok:false},
-    {n:'Puerto Madero',d:'Puente de la Mujer y la reserva ecológica al lado',p:'Gratis',ok:false},
-    Object.assign({},LUGAR_COLONIA),
-    {n:'Parrilla de barrio',d:'Un bodegón lejos del centro turístico',p:'USD 15 c/u',ok:false},
-    {n:'Heladería artesanal',d:'Dulce de leche granizado. No es negociable',p:'USD 4',ok:false}
-  ]
+  lugares:lugaresV14([])
 };
   ponerEstimados(e.itinerario);
   aplicarV11(e.itinerario);
@@ -1336,6 +1366,19 @@ function migrar(e){
       e.previo.splice(i<0?e.previo.length:i+1,0,nuevo);
     }
     e.ver=13;
+  }
+  if(e.ver<14){
+    /* v13 → v14. Dinero en "Antes de viajar" y Guía con los lugares del plan; lo marcado se conserva */
+    const dol=e.previo.find(p=>p.t==='Dólares en efectivo');
+    if(dol&&dol.s==='Billetes de 100 en buen estado. Allá cambien de a poco y guarden pesos para El Desnivel (solo efectivo), colectivos y propinas.') dol.s='Cambien sus soles a dólares acá en Lima: unos US$ 200 en billetes de 100 nuevos. Guarden pesos para El Desnivel (solo efectivo), colectivos y propinas.';
+    let i=e.previo.findIndex(p=>p.t==='Uso internacional activado');
+    for(const t of ['Dos tarjetas en lugares separados','Tarjeta agregada en Uber']){
+      if(e.previo.some(p=>p.t===t)) continue;
+      const nuevo=Object.assign({ok:false},PREVIO_V12.find(p=>p.t===t));
+      if(i<0) e.previo.push(nuevo); else e.previo.splice(++i,0,nuevo);
+    }
+    e.lugares=lugaresV14(e.lugares);
+    e.ver=14;
   }
   if(!e.billetera) e.billetera={inicial:{USD:0,PEN:0,ARS:0},cambios:[]};
   if(!e.emergencia) e.emergencia={seguro:'',seguroTel:'',poliza:'',contacto:'',contactoTel:''};
@@ -1840,12 +1883,14 @@ function encuadre(lls,W,H,extra){
   return {zf,ts,ox,oy,teselas};
 }
 /* todas las teselas que usan los mapas de los cinco días, en cada zona */
+/* en Buenos Aires el mapa incluye siempre el departamento, que es donde empieza y termina cada día */
+function conCasa(lls,zona){ const c=casaLL(); return c&&zona==='ba'?lls.concat([c]):lls; }
 function teselasDelViaje(W,H){
   const urls=new Set();
   DIAS.forEach(d=>{
     const pts=filasDelDia(E.itinerario[d.id]||[]).filter(f=>f.num);
     const zonas=[...new Set(pts.map(f=>zonaDe(f.ll)))];
-    zonas.forEach(z=>encuadre(pts.filter(f=>zonaDe(f.ll)===z).map(f=>f.ll),W,H,zonas.length>1?36:0).teselas.forEach(t=>urls.add(t.url)));
+    zonas.forEach(z=>encuadre(conCasa(pts.filter(f=>zonaDe(f.ll)===z).map(f=>f.ll),z),W,H,zonas.length>1?36:0).teselas.forEach(t=>urls.add(t.url)));
   });
   return [...urls];
 }
@@ -1892,7 +1937,7 @@ function pintarRuta(filas){
   const W=marco.clientWidth||343, H=marco.clientHeight||240, pad=30;
 
   /* zoom continuo: la ruta llena el mapa y las teselas del zoom entero se escalan */
-  const {zf,ts,ox,oy,teselas}=encuadre(enZona.map(f=>f.ll),W,H,extra);
+  const {zf,ts,ox,oy,teselas}=encuadre(conCasa(enZona.map(f=>f.ll),zonaSel),W,H,extra);
   const aPantalla=ll=>{ const p=proyectar(ll,zf); return [p[0]-ox,p[1]-oy]; };
 
   let h=teselas.map(t=>`<img class="tile" alt="" src="${t.url}" style="left:${t.left.toFixed(1)}px;top:${t.top.toFixed(1)}px;width:${(ts+.5).toFixed(1)}px;height:${(ts+.5).toFixed(1)}px" onerror="this.remove()">`).join('');
@@ -1986,7 +2031,7 @@ async function geocodificar(dir,dia){
 }
 
 /* ================= guía y mapa ================= */
-const geoDe=l=>GEO[l.n]||{};
+const geoDe=l=>l.ll?{ll:l.ll,q:l.q}:(GEO[l.n]||{});
 function distKm(a,b){
   const R=6371, r=x=>x*Math.PI/180;
   const dLat=r(b[0]-a[0]), dLon=r(b[1]-a[1]);
