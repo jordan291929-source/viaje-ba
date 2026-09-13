@@ -1,6 +1,8 @@
 /* Viaje BA — service worker
    Sube la versión cada vez que cambies index.html: así el celular se entera y actualiza. */
-const VERSION = 'viaje-ba-v9';
+const VERSION = 'viaje-ba-v10';
+// Los mapas guardados para usar sin internet viven aparte y sobreviven a las actualizaciones.
+const MAPAS = 'viaje-ba-mapas';
 const ARMAZON = [
   './',
   './index.html',
@@ -22,7 +24,7 @@ self.addEventListener('install', ev => {
 self.addEventListener('activate', ev => {
   ev.waitUntil(
     caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k))))
+      .then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== MAPAS).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -32,6 +34,16 @@ self.addEventListener('fetch', ev => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
+
+  // Teselas del mapa: si están guardadas se usan sin internet; si no, van a la red.
+  if (url.hostname.endsWith('basemaps.cartocdn.com')) {
+    ev.respondWith(
+      caches.open(MAPAS)
+        .then(c => c.match(req.url, { ignoreVary: true }))
+        .then(hit => hit || fetch(req))
+    );
+    return;
+  }
 
   // Las cotizaciones nunca se guardan: o son de ahora, o la app usa su propia copia.
   if (url.origin !== self.location.origin) return;

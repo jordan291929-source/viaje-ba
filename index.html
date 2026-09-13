@@ -64,6 +64,21 @@
   .cinta .recarga.girando svg{animation:giro 1s linear infinite}
   @keyframes giro{to{transform:rotate(360deg)}}
 
+  /* tarjeta Hoy */
+  .hoy{background:var(--card);border-radius:var(--r);box-shadow:var(--sombra);margin:12px 16px 0;padding:14px 16px}
+  .hoy-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .hoy-cab b{font-size:14px;font-weight:600}
+  .hoy-cab span{font-size:13px;color:var(--gris);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .hoy-sig{display:flex;align-items:center;gap:12px;background:var(--teal-claro);border-radius:12px;padding:10px 12px}
+  .hoy-sig .cuerpo{flex:1;min-width:0}
+  .hoy-sig .rt{font-size:11.5px;font-weight:600;color:var(--teal-hondo);letter-spacing:.2px}
+  .hoy-sig .t{font-size:15px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hoy-sig .s{font-size:12px;color:var(--teal-hondo);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hoy-gasto{margin-top:12px}
+  .hoy-gasto .fila{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;margin-bottom:6px;font-variant-numeric:tabular-nums}
+  .hoy-gasto .fila b{font-weight:700}
+  .hoy-acc{display:flex;gap:8px;margin-top:12px}
+  .hoy-acc .btn{margin:0;padding:10px;font-size:14px}
   /* relojes Lima / Buenos Aires */
   .relojes{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:11px 14px;background:var(--card);border-radius:var(--r);box-shadow:var(--sombra)}
   .reloj{flex:1;min-width:0;text-align:center}
@@ -360,6 +375,8 @@
       <div class="pie"><span id="pie-izq">—</span><span id="pie-der">—</span></div>
     </div>
 
+    <div class="hoy" id="hoy" hidden></div>
+
     <div class="cinta" id="cinta">
       <span class="punto off"></span>
       <span class="txt"><b>Buscando cotización…</b><span>&nbsp;</span></span>
@@ -457,6 +474,11 @@
       <div class="tit">Estimado de todo el viaje <span class="cont" id="viaje-est-total"></span></div>
       <p class="nota" style="margin:-4px 0 8px">Lo que cuesta el plan para los dos, con la cotización de hoy, contra tus sobres.</p>
       <div id="viaje-est"></div>
+    </div>
+    <div class="bloque">
+      <div class="tit">Mapas sin internet <span class="cont" id="mapas-estado"></span></div>
+      <p class="nota" style="margin:-4px 0 12px" id="mapas-nota">Guarda los mapas de todos los días para verlos sin señal y no gastar tus GB de roaming. Hazlo con Wi-Fi.</p>
+      <button class="btn sec" id="mapas-guardar">Guardar mapas de todos los días</button>
     </div>
   </section>
 
@@ -798,7 +820,7 @@ const almacen={
 };
 
 /* ================= datos base ================= */
-const VER=12;
+const VER=13;
 const TZ='America/Argentina/Buenos_Aires';
 const DIAS=[
   {id:'d21',f:'2026-11-21',n:'Sábado 21',s:'Caminata por el centro para ambientarse'},
@@ -1077,7 +1099,8 @@ const PREVIO_V12=[
   {t:'Reservar la visita a la Casa Rosada',s:'Gratis en visitas.casarosada.gob.ar, para el sábado 21 a las 16:00. Los turnos abren 15 días antes.',desde:'2026-11-06'},
   {t:'Comprar la visita guiada al Teatro Colón',s:'En teatrocolon.org.ar, para el sábado 21 a las 11:30.'},
   {t:'Confirmar la terminal del barco a Colonia',s:'Buquebus y Colonia Express salen de puertos distintos. Con eso se ajusta la hora del Uber del domingo.'},
-  {t:'Internet en el celular',s:'eSIM o chip argentino: sin datos no funcionan Uber, los mapas ni las cotizaciones.'},
+  {t:'Internet en el celular',s:'Tu eSIM de Entel sirve con roaming: activa "Roaming activo" en Mi Entel y revisa cuántos GB de roaming trae tu plan.'},
+  {t:'Mapas guardados sin internet',s:'En Días, al final: "Guardar mapas de todos los días", con Wi-Fi y después de cerrar el plan.'},
   {t:'Dólares en efectivo',s:'Billetes de 100 en buen estado. Allá cambien de a poco y guarden pesos para El Desnivel (solo efectivo), colectivos y propinas.'},
   {t:'Documentos en la app',s:'Pasaporte, seguro, reserva, pasajes y voucher del tour, guardados en Documentos para verlos sin señal.'},
   {t:'Datos del seguro en Emergencias',s:'Aseguradora, teléfono 24 h y póliza, en el botón del escudo de arriba.'},
@@ -1171,6 +1194,10 @@ let E=null, desde='ARS', modoGastos='sobres', editando=null, alTmp=null, aqui=nu
 /* ================= fechas ================= */
 const fechaBA=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));
 /* a qué día del viaje pertenece un momento: antes del 20 es "previo", después del 25 se queda en el 25 */
+/* ?hoy=2026-11-21&hora=14:00 en el enlace muestra la app como si fuera ese momento del viaje */
+const SIM=(()=>{ try{ const q=new URLSearchParams(location.search); const f=q.get('hoy'), h=q.get('hora');
+  return {f:/^\d{4}-\d\d-\d\d$/.test(f||'')?f:null, h:/^\d\d:\d\d$/.test(h||'')?h:null}; }catch(e){ return {f:null,h:null}; } })();
+const hoyBA=()=>SIM.f||fechaBA(Date.now());
 function diaDe(ms){
   const f=fechaBA(ms);
   if(f<'2026-11-20') return 'previo';
@@ -1297,6 +1324,16 @@ function migrar(e){
     if(CATS.every(c=>e.topes[c]===TOPES_V7[c])) Object.assign(e.topes,TOPES_V12);
     e.previo=actualizarPrevio(e.previo||[]);
     e.ver=12;
+  }
+  if(e.ver<13){
+    /* v12 → v13. Internet con roaming de Entel y mapas sin internet en la lista, sin tocar lo marcado */
+    const inet=e.previo.find(p=>p.t==='Internet en el celular');
+    if(inet&&inet.s==='eSIM o chip argentino: sin datos no funcionan Uber, los mapas ni las cotizaciones.') inet.s=PREVIO_V12.find(p=>p.t==='Internet en el celular').s;
+    if(!e.previo.some(p=>p.t==='Mapas guardados sin internet')){
+      const i=e.previo.findIndex(p=>p.t==='Internet en el celular'), nuevo=Object.assign({ok:false},PREVIO_V12.find(p=>p.t==='Mapas guardados sin internet'));
+      e.previo.splice(i<0?e.previo.length:i+1,0,nuevo);
+    }
+    e.ver=13;
   }
   if(!e.billetera) e.billetera={inicial:{USD:0,PEN:0,ARS:0},cambios:[]};
   if(!e.emergencia) e.emergencia={seguro:'',seguroTel:'',poliza:'',contacto:'',contactoTel:''};
@@ -1451,6 +1488,41 @@ function cuandoPrevio(p){
   const [,m,d]=p.desde.split('-').map(Number);
   return fechaBA(Date.now())<p.desde?`<span class="cuando">Desde el ${d} de ${MESES[m-1]}</span>`:'<span class="cuando ya">Ya se puede hacer</span>';
 }
+const minutoBA=()=>SIM.h?aMin(SIM.h):partesHora(TZ,new Date()).min;
+function pintarHoy(){
+  const el=$('hoy'), f=hoyBA();
+  if(f==='2026-11-20'){
+    const pend=E.previo.filter(p=>!p.ok).length;
+    el.hidden=false;
+    el.innerHTML=`<div class="hoy-cab"><b>Hoy viajan</b><span>Salen de Lima a las 22:40</span></div>
+      <div class="hoy-sig"><div class="cuerpo"><div class="rt">ANTES DE SALIR</div>
+        <div class="t">${pend?pend+(pend===1?' pendiente':' pendientes')+' en la lista':'Todo listo'}</div>
+        <div class="s">Documentos, efectivo y roaming activo.</div></div></div>
+      <div class="hoy-acc"><button class="btn sec" data-docs>Documentos</button><button class="btn" data-ir="dias">Ver el plan</button></div>`;
+    return;
+  }
+  const d=DIAS.find(x=>x.f===f);
+  if(!d){ el.hidden=true; return; }
+  const ps=E.itinerario[d.id]||[], m=minutoBA(), filas=filasDelDia(ps);
+  /* la próxima parada sin hacer que no haya pasado hace más de una hora */
+  let i=ps.findIndex(p=>!p.ok&&aMin(p.h)!=null&&aMin(p.h)+60>=m);
+  if(i<0) i=ps.findIndex(p=>!p.ok&&aMin(p.h)==null);
+  const p=i>=0?ps[i]:null, fila=p?filas[i]:null, ahora=p&&aMin(p.h)!=null&&aMin(p.h)<=m;
+  const est=estDePasos(ps).total, real=E.gastos.filter(g=>g.dia===d.f).reduce((t,g)=>t+pesoDe(g),0);
+  const pct=est?Math.min(100,real/est*100):(real?100:0);
+  const c=E.clima&&E.clima.dias&&E.clima.dias[d.f]&&E.clima.dias[d.f][d.id==='d22'?'uy':'ba'];
+  const b=E.billetera, conEfectivo=Object.values(b.inicial).some(v=>+v>0)||b.cambios.length;
+  el.hidden=false;
+  el.innerHTML=`<div class="hoy-cab"><b>Hoy · ${d.n}</b><span>${c?iconoClima(c.cod)[0]+' '+Math.round(c.max)+'° / '+Math.round(c.min)+'°':''}</span></div>
+    ${p?`<div class="hoy-sig"><div class="cuerpo"><div class="rt">${ahora?'AHORA':'SIGUIENTE'} · ${esc(p.h)}</div>
+        <div class="t">${esc(p.t)}</div>${p.nota?`<div class="s">${esc(p.nota)}</div>`:''}</div>
+        ${fila&&fila.ll?`<a class="pildora" href="${urlDesde(fila.desde,p)}" target="_blank" rel="noopener">Ir</a>`:''}</div>`
+      :'<div class="hoy-sig"><div class="cuerpo"><div class="rt">DÍA COMPLETO</div><div class="t">Hicieron todo lo del plan</div></div></div>'}
+    <div class="hoy-gasto"><div class="fila"><span>Gastado hoy</span><span><b>${s0(real)}</b> de ≈ ${s0(est)}</span></div>
+      <div class="mini"><i class="${est&&real>est*1.05?'mal':pct>85?'alerta':''}" style="width:${pct}%"></i></div>
+      ${conEfectivo?`<p class="nota" style="margin-top:6px">Efectivo que les queda: ${pesos(saldosEfectivo().ARS)}</p>`:''}</div>
+    <div class="hoy-acc">${p?`<button class="btn sec" data-dia="${d.id}" data-i="${i}">Marcar hecha</button>`:''}<button class="btn" data-nuevo-gasto>Anotar gasto</button></div>`;
+}
 function pintarInicio(){
   const gastado=E.gastos.reduce((s,g)=>s+pesoDe(g),0);
   const saldo=E.presupuesto-gastado;
@@ -1465,6 +1537,7 @@ function pintarInicio(){
   $('pie-der').textContent=saldo<0?'Sobregirado':libre<=0?'Sin margen diario':`${s0(libre/diasRestantes())} por día`;
 
   pintarCinta();
+  pintarHoy();
 
   $('pct-listo').textContent=`${E.previo.filter(p=>p.ok).length} de ${E.previo.length}`;
   $('lista-previo').innerHTML=E.previo.map((p,i)=>`
@@ -1626,7 +1699,7 @@ const chocaColonia=(dia,p)=>dia==='d22'&&p.h>'12:30'&&p.h<'21:30'&&!TEXTOS_PLAN.
   &&E.itinerario.d22.some(x=>x.t===P5.ida);
 
 function diaInicial(){
-  const hoy=fechaBA(Date.now()), d=DIAS.find(x=>x.f===hoy);
+  const hoy=hoyBA(), d=DIAS.find(x=>x.f===hoy);
   return d?d.id:hoy>'2026-11-25'?'d25':'d21';
 }
 /* las calles no van en línea recta: se estira la distancia un 30% */
@@ -1664,7 +1737,7 @@ function filasDelDia(ps){
 
 function pintarDias(){
   if(!diaSel) diaSel=diaInicial();
-  const hoy=fechaBA(Date.now());
+  const hoy=hoyBA();
   $('dias-tabs').innerHTML=DIAS.map(d=>{
     const [dn,dd]=d.n.split(' ');
     return `<button class="${d.id===diaSel?'on':''}" data-dsel="${d.id}" aria-label="${d.n}">${d.f===hoy?'<i class="hoy-punto"></i>':''}<span class="dn">${dn.slice(0,3)}</span><span class="dd">${dd}</span></button>`;
@@ -1691,7 +1764,7 @@ function pintarDias(){
 
   let iAhora=-1, iSig=-1;
   if(esHoy){
-    const m=partesHora(TZ,new Date()).min;
+    const m=minutoBA();
     ps.forEach((p,i)=>{ const pm=aMin(p.h); if(pm==null) return; if(pm<=m) iAhora=i; else if(iSig<0) iSig=i; });
     if(iAhora>=0&&(ps[iAhora].ok||m-aMin(ps[iAhora].h)>120)) iAhora=-1;
   }
@@ -1718,6 +1791,7 @@ function pintarDias(){
 
   pintarRuta(filas);
   pintarEstimadoViaje();
+  pintarMapasEstado();
 }
 function pintarEstimadoViaje(){
   const est=estDePasos(Object.values(E.itinerario).flat());
@@ -1743,6 +1817,66 @@ function proyectar(ll,z){
   const t=256*Math.pow(2,z), sen=Math.sin(ll[0]*Math.PI/180);
   return [(ll[1]+180)/360*t,(0.5-Math.log((1+sen)/(1-sen))/(4*Math.PI))*t];
 }
+const CACHE_MAPAS='viaje-ba-mapas';
+/* encuadre del mapa: la ruta llena el marco; devuelve el zoom y las teselas que se ven */
+function encuadre(lls,W,H,extra){
+  const pad=30;
+  const base=lls.map(ll=>proyectar(ll,0)), bx=base.map(a=>a[0]), by=base.map(a=>a[1]);
+  const dx=Math.max(...bx)-Math.min(...bx), dy=Math.max(...by)-Math.min(...by);
+  const zx=dx?Math.log2((W-pad*2)/dx):16, zy=dy?Math.log2((H-pad*2-extra)/dy):16;
+  const zf=Math.max(3,Math.min(16,zx,zy)), zi=Math.floor(zf), ts=256*Math.pow(2,zf-zi), n=Math.pow(2,zi);
+  const xy=lls.map(ll=>proyectar(ll,zf)), xs=xy.map(a=>a[0]), ys=xy.map(a=>a[1]);
+  const ox=(Math.max(...xs)+Math.min(...xs))/2-W/2, oy=(Math.max(...ys)+Math.min(...ys))/2-H/2-extra/2;
+  const teselas=[];
+  for(let tx=Math.floor(ox/ts);tx<=Math.floor((ox+W)/ts);tx++)
+    for(let ty=Math.floor(oy/ts);ty<=Math.floor((oy+H)/ts);ty++){
+      if(ty<0||ty>=n) continue;
+      const x=((tx%n)+n)%n;
+      teselas.push({url:TESELA.replace('{s}','abcd'[(x+ty)%4]).replace('{z}',zi).replace('{x}',x).replace('{y}',ty),left:tx*ts-ox,top:ty*ts-oy});
+    }
+  return {zf,ts,ox,oy,teselas};
+}
+/* todas las teselas que usan los mapas de los cinco días, en cada zona */
+function teselasDelViaje(W,H){
+  const urls=new Set();
+  DIAS.forEach(d=>{
+    const pts=filasDelDia(E.itinerario[d.id]||[]).filter(f=>f.num);
+    const zonas=[...new Set(pts.map(f=>zonaDe(f.ll)))];
+    zonas.forEach(z=>encuadre(pts.filter(f=>zonaDe(f.ll)===z).map(f=>f.ll),W,H,zonas.length>1?36:0).teselas.forEach(t=>urls.add(t.url)));
+  });
+  return [...urls];
+}
+async function pintarMapasEstado(){
+  const est=$('mapas-estado'), b=$('mapas-guardar');
+  if(!$('v-dias').classList.contains('on')||b.disabled) return;
+  if(!('caches' in window)){ est.textContent=''; b.hidden=true; $('mapas-nota').textContent='Este navegador no permite guardar mapas.'; return; }
+  const W=$('ruta-marco').clientWidth||343, urls=teselasDelViaje(W,240);
+  let faltan=0;
+  try{ const c=await caches.open(CACHE_MAPAS); for(const u of urls) if(!(await c.match(u))) faltan++; }catch(e){ faltan=urls.length; }
+  if(faltan===0){ est.textContent='Guardados'; b.textContent='Volver a guardar'; }
+  else if(faltan<urls.length){ est.textContent=`Faltan ${faltan}`; b.textContent='Guardar lo que falta'; }
+  else { est.textContent=''; b.textContent='Guardar mapas de todos los días'; }
+}
+$('mapas-guardar').onclick=async()=>{
+  const b=$('mapas-guardar'); if(b.disabled) return;
+  const W=$('ruta-marco').clientWidth||343, urls=teselasDelViaje(W,240);
+  b.disabled=true;
+  let ok=0, kb=0;
+  try{
+    const c=await caches.open(CACHE_MAPAS);
+    for(let i=0;i<urls.length;i++){
+      b.textContent=`Guardando ${i+1} de ${urls.length}…`;
+      try{
+        if(await c.match(urls[i])){ ok++; continue; }
+        const r=await fetch(urls[i],{mode:'cors'});
+        if(r.ok){ kb+=(+r.headers.get('content-length')||0)/1024; await c.put(urls[i],r); ok++; }
+      }catch(e){}
+    }
+  }catch(e){}
+  b.disabled=false;
+  await pintarMapasEstado();
+  avisar(ok===urls.length?`Mapas guardados para usar sin internet${kb?' · '+(kb<1024?Math.round(kb)+' KB':nf(kb/1024,1)+' MB'):''}`:`Se guardaron ${ok} de ${urls.length}. Inténtalo otra vez con mejor señal.`);
+};
 function pintarRuta(filas){
   const marco=$('ruta-marco'), pts=filas.filter(f=>f.num);
   $('ruta').hidden=!pts.length;
@@ -1755,21 +1889,10 @@ function pintarRuta(filas){
   const W=marco.clientWidth||343, H=marco.clientHeight||240, pad=30;
 
   /* zoom continuo: la ruta llena el mapa y las teselas del zoom entero se escalan */
-  const base=enZona.map(f=>proyectar(f.ll,0)), bx=base.map(a=>a[0]), by=base.map(a=>a[1]);
-  const dx=Math.max(...bx)-Math.min(...bx), dy=Math.max(...by)-Math.min(...by);
-  const zx=dx?Math.log2((W-pad*2)/dx):16, zy=dy?Math.log2((H-pad*2-extra)/dy):16;
-  const zf=Math.max(3,Math.min(16,zx,zy)), zi=Math.floor(zf), esc2=Math.pow(2,zf-zi), ts=256*esc2, n=Math.pow(2,zi);
-  const xy=enZona.map(f=>proyectar(f.ll,zf)), xs=xy.map(a=>a[0]), ys=xy.map(a=>a[1]);
-  const ox=(Math.max(...xs)+Math.min(...xs))/2-W/2, oy=(Math.max(...ys)+Math.min(...ys))/2-H/2-extra/2;
+  const {zf,ts,ox,oy,teselas}=encuadre(enZona.map(f=>f.ll),W,H,extra);
   const aPantalla=ll=>{ const p=proyectar(ll,zf); return [p[0]-ox,p[1]-oy]; };
 
-  let h='';
-  for(let tx=Math.floor(ox/ts);tx<=Math.floor((ox+W)/ts);tx++)
-    for(let ty=Math.floor(oy/ts);ty<=Math.floor((oy+H)/ts);ty++){
-      if(ty<0||ty>=n) continue;
-      const x=((tx%n)+n)%n, url=TESELA.replace('{s}','abcd'[(x+ty)%4]).replace('{z}',zi).replace('{x}',x).replace('{y}',ty);
-      h+=`<img class="tile" alt="" src="${url}" style="left:${(tx*ts-ox).toFixed(1)}px;top:${(ty*ts-oy).toFixed(1)}px;width:${(ts+.5).toFixed(1)}px;height:${(ts+.5).toFixed(1)}px" onerror="this.remove()">`;
-    }
+  let h=teselas.map(t=>`<img class="tile" alt="" src="${t.url}" style="left:${t.left.toFixed(1)}px;top:${t.top.toFixed(1)}px;width:${(ts+.5).toFixed(1)}px;height:${(ts+.5).toFixed(1)}px" onerror="this.remove()">`).join('');
   const linea=enZona.map(f=>aPantalla(f.ll).map(v=>v.toFixed(1)).join(',')).join(' ');
   h+=`<svg aria-hidden="true"><polyline points="${linea}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>
     <polyline points="${linea}" fill="none" stroke="#0E7C7B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6"/></svg>`;
@@ -2005,7 +2128,7 @@ function abrirGasto(g){
   $('g-monto').value=g?g.monto:'';
   $('g-mon').value=g?g.mon:($('g-mon').dataset.ultima||'ARS');
   $('g-cat').value=g?g.cat:'Comida';
-  $('g-dia').value=g?g.dia:diaDe(Date.now());
+  $('g-dia').value=g?g.dia:(SIM.f&&DIAS_G.some(x=>x.f===SIM.f)?SIM.f:diaDe(Date.now()));
   $('g-add').textContent=g?'Guardar cambios':'Anotar';
   $('g-borrar').hidden=!g;
   medioTocado=!!g; medioSel=g?(g.medio||'tarjeta'):($('g-mon').value==='PEN'?'tarjeta':'efectivo'); pintarMedio();
@@ -2274,7 +2397,7 @@ document.body.addEventListener('click',async e=>{
   if(ds.cambio!==undefined){ const c=E.billetera.cambios.find(x=>String(x.id)===ds.cambio); if(c) abrirCambio(c); return; }
   if(ds.gasto!==undefined){ const g=E.gastos.find(x=>String(x.id)===ds.gasto); if(g) abrirGasto(g); return; }
   if(ds.hoy!==undefined){
-    const d=DIAS.find(x=>x.f===fechaBA(Date.now()));
+    const d=DIAS.find(x=>x.f===hoyBA());
     if(d){ diaSel=d.id; pasoSel=null; zonaSel=null; }
     irA('dias'); return;
   }
@@ -2656,7 +2779,8 @@ function pintarRelojes(){
 
 /* ================= arranque ================= */
 function pintarCuenta(){
-  const faltan=Math.ceil((new Date('2026-11-20T22:40:00-05:00')-new Date())/86400000);
+  const ahora=SIM.f?new Date(SIM.f+'T12:00:00-03:00'):new Date();
+  const faltan=Math.ceil((new Date('2026-11-20T22:40:00-05:00')-ahora)/86400000);
   $('cuenta').textContent=faltan>1?`Faltan ${faltan} días · 20–25 nov`:faltan===1?'Mañana viajan · 20–25 nov':'Buenos Aires · 20–25 nov';
 }
 if('serviceWorker' in navigator){
@@ -2677,7 +2801,7 @@ if('serviceWorker' in navigator){
 
   /* en tiempo real: cada minuto se refresca el "hace X min" y cada 10 se traen cotizaciones nuevas */
   setInterval(()=>{
-    pintarCinta(); pintarCuenta(); traerClima();
+    pintarCinta(); pintarCuenta(); traerClima(); pintarHoy();
     if(!document.hidden&&navigator.onLine!==false&&viejas(10)) actualizar(false);
   },60000);
   document.addEventListener('visibilitychange',()=>{
