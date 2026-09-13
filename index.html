@@ -1680,8 +1680,9 @@ function abrirAloj(o){
 }
 function guardarAlojTmp(){
   leerAloj();
-  if(!alTmp.nombre){ $('al-nombre').focus(); return null; }
-  if(!(alTmp.precio>0)){ $('al-precio').focus(); return null; }
+  const falta=(id,txt)=>{ $('al-calc').innerHTML=`<span style="color:var(--rojo)">${txt}</span>`; avisar(txt); $(id).focus(); return null; };
+  if(!alTmp.nombre) return falta('al-nombre','Falta el nombre del alojamiento.');
+  if(!(alTmp.precio>0)) return falta('al-precio','Falta el precio por noche.');
   const ops=E.alojamiento.opciones;
   if(alTmp.id){ const o=ops.find(x=>x.id===alTmp.id);
     if(o.dir!==alTmp.dir){ alTmp.ll=null; alTmp.aprox=false; }
@@ -2106,7 +2107,7 @@ function pintarTodo(){ pintarInicio(); pintarGastos(); pintarDias(); pintarLugar
 /* ================= hojas ================= */
 const velo=$('velo');
 const abrir=id=>{ document.querySelectorAll('.hoja.on').forEach(h=>h.classList.remove('on')); $('hoja-'+id).classList.add('on'); velo.classList.add('on'); };
-const cerrar=()=>{ document.querySelectorAll('.hoja').forEach(h=>h.classList.remove('on')); velo.classList.remove('on'); };
+const cerrar=()=>{ if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); document.querySelectorAll('.hoja').forEach(h=>{ h.classList.remove('on'); h.style.maxHeight=''; h.style.bottom=''; }); velo.classList.remove('on'); };
 velo.onclick=cerrar;
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') cerrar(); });
 /* las hojas se cierran con la × o arrastrándolas hacia abajo desde arriba del todo */
@@ -2118,7 +2119,11 @@ document.querySelectorAll('.hoja').forEach(h=>{
   h.addEventListener('touchstart',e=>{
     if(e.touches.length!==1){ y0=null; return; }
     y0=e.touches[0].clientY; dy=0; t0=Date.now(); arrastrando=false;
-    puede=h.scrollTop<=0||!!e.target.closest('.agarre');
+    /* desde la cabecera (barrita y título) siempre se puede cerrar; desde el contenido solo si la hoja
+       está arriba del todo, no se está escribiendo y el dedo no está sobre un campo */
+    const enCabecera=e.touches[0].clientY-h.getBoundingClientRect().top<64;
+    const escribiendo=h.contains(document.activeElement)&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
+    puede=enCabecera||(h.scrollTop<=0&&!escribiendo&&!e.target.closest('input,select,textarea,.campo,.duo'));
   },{passive:true});
   h.addEventListener('touchmove',e=>{
     if(y0===null||!puede) return;
@@ -2145,6 +2150,21 @@ document.querySelectorAll('.hoja').forEach(h=>{
   h.addEventListener('touchend',soltar);
   h.addEventListener('touchcancel',soltar);
 });
+/* con el teclado abierto la hoja se achica al espacio visible, así se puede desplazar hasta los campos de arriba */
+function ajustarHojaTeclado(){
+  const h=document.querySelector('.hoja.on'), vv=window.visualViewport;
+  document.querySelectorAll('.hoja').forEach(x=>{ if(x!==h){ x.style.maxHeight=''; x.style.bottom=''; } });
+  if(!h||!vv) return;
+  const teclado=window.innerHeight-vv.height-vv.offsetTop;
+  if(teclado>80){ h.style.maxHeight=Math.round(vv.height-12)+'px'; h.style.bottom=Math.round(teclado)+'px'; }
+  else { h.style.maxHeight=''; h.style.bottom=''; }
+}
+if(window.visualViewport){ visualViewport.addEventListener('resize',ajustarHojaTeclado); visualViewport.addEventListener('scroll',ajustarHojaTeclado); }
+document.addEventListener('focusin',e=>{
+  const h=e.target.closest&&e.target.closest('.hoja'); if(!h) return;
+  setTimeout(()=>{ ajustarHojaTeclado(); e.target.scrollIntoView({block:'center',behavior:'smooth'}); },320);
+});
+document.addEventListener('focusout',()=>setTimeout(ajustarHojaTeclado,120));
 
 /* ================= navegación ================= */
 function irA(v){
@@ -2269,12 +2289,23 @@ window.addEventListener('resize',()=>{ clearTimeout(reajuste); reajuste=setTimeo
 /* ================= alojamiento: eventos ================= */
 ['al-noches','al-precio','al-nombre'].forEach(id=>$(id).oninput=calcAloj);
 $('al-mon').onchange=calcAloj;
+/* con la dirección nueva se busca su ubicación, para el mapa, los tramos y "Cómo llegar" */
+async function ubicarAloj(o,boton){
+  if(!o.dir||o.ll) return;
+  const txt=boton.textContent; boton.disabled=true; boton.textContent='Ubicando la dirección…';
+  const g=await geocodificar(o.dir,'d21');
+  boton.disabled=false; boton.textContent=txt;
+  if(g){ o.ll=g.ll; o.aprox=false; }
+  else avisar('No encontré la dirección en el mapa. Revísala o inténtalo con internet.');
+}
 $('al-save').onclick=async()=>{
-  if(!guardarAlojTmp()) return;
-  cerrar(); pintarTodo(); await guardar();
+  const o=guardarAlojTmp(); if(!o) return;
+  await ubicarAloj(o,$('al-save'));
+  cerrar(); mapaListo=false; pintarTodo(); await guardar();
 };
 $('al-elegir').onclick=async()=>{
   const o=guardarAlojTmp(); if(!o) return;
+  await ubicarAloj(o,$('al-elegir'));
   const antes=E.alojamiento.elegida;
   E.alojamiento.elegida=o.id;
   cerrar(); pintarTodo(); await guardar();
